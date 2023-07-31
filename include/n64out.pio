@@ -12,7 +12,7 @@ jmp !x write_single
 ;doread:
 in null 24
 nextread:
-    wait 0 pin 0 [16] ; wait for gamepad LOW assertion
+    wait 0 pin 0 [31] ; wait for gamepad LOW assertion
     in pins 1
     wait 1 pin 0 ; wait for gamepad HIGH/release
     out null 1
@@ -27,10 +27,10 @@ write_single:
 out null 7
 outnext:
     ; wait loop for Y 
-    set pindirs, 1 [8]
+    set pindirs, 1 [15]
     ; set to low if we are on a low bit
-    out pindirs, 1 [16]
-    set pindirs, 0 [8]
+    out pindirs, 1 [31]
+    set pindirs, 0 [14]
     jmp !osre outnext
 
 % c-sdk {
@@ -46,7 +46,7 @@ static inline void n64out_program_init(PIO pio, uint sm, uint offset, uint pin) 
     sm_config_set_out_shift(&c, false, false, 32);
     sm_config_set_in_shift(&c, false, false, 32);
     
-    float frac = (clock_get_hz(clk_sys) / 1000000) / 8;
+    float frac = (clock_get_hz(clk_sys) / 1000000) / 16;
     sm_config_set_clkdiv(&c, frac);
 
     // Load our configuration, and jump to the start of the program

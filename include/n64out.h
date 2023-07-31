@@ -23,7 +23,7 @@ static const uint16_t n64out_program_instructions[] = {
     0x6028, //  3: out    x, 8                       
     0x002e, //  4: jmp    !x, 14                     
     0x4078, //  5: in     null, 24                   
-    0x3020, //  6: wait   0 pin, 0               [16]
+    0x3f20, //  6: wait   0 pin, 0               [31]
     0x4001, //  7: in     pins, 1                    
     0x20a0, //  8: wait   1 pin, 0                   
     0x6061, //  9: out    null, 1                    
@@ -32,9 +32,9 @@ static const uint16_t n64out_program_instructions[] = {
     0x0000, // 12: jmp    0                          
     0x6061, // 13: out    null, 1                    
     0x6067, // 14: out    null, 7                    
-    0xe881, // 15: set    pindirs, 1             [8] 
-    0x7081, // 16: out    pindirs, 1             [16]
-    0xe880, // 17: set    pindirs, 0             [8] 
+    0xef81, // 15: set    pindirs, 1             [15]
+    0x7f81, // 16: out    pindirs, 1             [31]
+    0xee80, // 17: set    pindirs, 0             [14]
     0x00ef, // 18: jmp    !osre, 15                  
             //     .wrap
 };
@@ -62,7 +62,7 @@ static inline void n64out_program_init(PIO pio, uint sm, uint offset, uint pin) 
     //sm_config_set_sideset_pins(&c, pin);
     sm_config_set_out_shift(&c, false, false, 32);
     sm_config_set_in_shift(&c, false, false, 32);
-    float frac = (clock_get_hz(clk_sys) / 1000000) / 8;
+    float frac = (clock_get_hz(clk_sys) / 1000000) / 16;
     sm_config_set_clkdiv(&c, frac);
     // Load our configuration, and jump to the start of the program
     pio_sm_init(pio, sm, offset, &c);
