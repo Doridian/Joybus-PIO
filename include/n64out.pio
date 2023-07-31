@@ -30,7 +30,7 @@ outnext:
     set pindirs, 1 [15]
     ; set to low if we are on a low bit
     out pindirs, 1 [31]
-    set pindirs, 0 [14]
+    set pindirs, 0 [14] ; only 14 delay because of jmp taking one cycle
     jmp !osre outnext
 
 % c-sdk {
