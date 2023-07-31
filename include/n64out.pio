@@ -1,8 +1,4 @@
 .program n64out
-.side_set 1 opt pindirs
-
-pull block side 0
-out y, 32 ; store required delay in Y (1us)
 
 .wrap_target
 wrap_target:
@@ -14,18 +10,9 @@ out x 8
 jmp !x write_single
 
 ;doread:
-;in y 32 side 0
-;push
-;jmp wrap_target
-in null 24 side 0
+in null 24
 nextread:
-    wait 0 pin 0 ; wait for gamepad LOW assertion
-    mov x, y
-    wtime_read:
-        jmp x-- wtime_read
-    mov x, y
-    wtime_read2:
-        jmp x-- wtime_read2
+    wait 0 pin 0 [16] ; wait for gamepad LOW assertion
     in pins 1
     wait 1 pin 0 ; wait for gamepad HIGH/release
     out null 1
@@ -40,23 +27,10 @@ write_single:
 out null 7
 outnext:
     ; wait loop for Y 
-    mov x, y side 1 ; assert low
-    wtime1:
-        jmp x-- wtime1
-
+    set pindirs, 1 [8]
     ; set to low if we are on a low bit
-    out pindirs 1
-    ; wait loop for 2Y
-    mov x, y
-    wtime2:
-        jmp x-- wtime2
-    mov x, y
-    wtime3:
-        jmp x-- wtime3
-
-    mov x, y side 0 ; de-assert to high
-    wtime4:
-        jmp x-- wtime4
+    out pindirs, 1 [16]
+    set pindirs, 0 [8]
     jmp !osre outnext
 
 % c-sdk {
@@ -67,16 +41,17 @@ static inline void n64out_program_init(PIO pio, uint sm, uint offset, uint pin) 
     sm_config_set_in_pins(&c, pin);
     sm_config_set_out_pins(&c, pin, 1);
     sm_config_set_set_pins(&c, pin, 1);
-    sm_config_set_sideset_pins(&c, pin);
+    //sm_config_set_sideset_pins(&c, pin);
 
     sm_config_set_out_shift(&c, false, false, 32);
     sm_config_set_in_shift(&c, false, false, 32);
+    
+    float frac = (clock_get_hz(clk_sys) / 1000000) / 8;
+    sm_config_set_clkdiv(&c, frac);
 
     // Load our configuration, and jump to the start of the program
     pio_sm_init(pio, sm, offset, &c);
     // Set the state machine running
     pio_sm_set_enabled(pio, sm, true);
-
-    pio->txf[sm] = (clock_get_hz(clk_sys) / 1000000) - 3;
 }
 %}

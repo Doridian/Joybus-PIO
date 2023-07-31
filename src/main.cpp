@@ -42,7 +42,7 @@ static int rx_bytes(int count, byte output[]) {
   }
 
   pio0->txf[0] = 0xFFFFFFFF;
-  for (int i = 0 ; i < count; i++) {
+  for (int i = 0; i < count; i++) {
     if (i < count - 1) {
       while (pio_sm_is_tx_fifo_full(pio0, 0)) {
         tight_loop_contents();
@@ -112,7 +112,7 @@ void loop1() {
   }
 
   for (int a = 0; a < BLOCK_COUNT; a++) {
-    delay(10);
+    delay(1);
     uint32_t addr = make_address(a);
     Serial.print("Reading... | ");
     Serial.print(a, HEX);
@@ -120,7 +120,6 @@ void loop1() {
     tx_byte(0x02);
     tx_byte(addr >> 8);
     tx_byte(addr & 0xFF);
-    Serial.print(" | ");
     uint32_t intstatus = save_and_disable_interrupts();
     tx_stopbit();
     int res_size = rx_bytes(BLOCK_SIZE+1, res);
