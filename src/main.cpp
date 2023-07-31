@@ -112,8 +112,26 @@ void loop1() {
   }
 
   for (int a = 0; a < BLOCK_COUNT; a++) {
-    delay(1);
     uint32_t addr = make_address(a);
+
+    /*delay(1);
+
+    Serial.print("Writing... | ");
+    Serial.print(a, HEX);
+    Serial.print(" | ");
+    tx_byte(0x03);
+    tx_byte(addr >> 8);
+    tx_byte(addr & 0xFF);
+    for (int i = 0; i < BLOCK_SIZE+1; i++) {
+      tx_byte((i % 2 == 0) ? 0x55 : 0xAA);
+      Serial.print(".");
+    }
+    tx_byte(95);
+    Serial.print("!");
+    Serial.println("| Done!");*/
+
+    delay(1);
+
     Serial.print("Reading... | ");
     Serial.print(a, HEX);
     Serial.print(" | ");
