@@ -33,7 +33,7 @@ static void tx_stopbit() {
   while (pio_sm_is_tx_fifo_full(pio0, 0)) {
     tight_loop_contents();
   }
-  pio0->txf[0] = 0xFFFF00FF;
+  pio0->txf[0] = 0xFF0000FF;
 }
 
 static int rx_bytes(int count, byte output[]) {

@@ -13,15 +13,15 @@
 // ------ //
 
 #define n64out_wrap_target 0
-#define n64out_wrap 18
+#define n64out_wrap 17
 
 static const uint16_t n64out_program_instructions[] = {
             //     .wrap_target
     0x80a0, //  0: pull   block                      
-    0x6030, //  1: out    x, 16                      
+    0x6031, //  1: out    x, 17                      
     0x002d, //  2: jmp    !x, 13                     
-    0x6028, //  3: out    x, 8                       
-    0x002e, //  4: jmp    !x, 14                     
+    0x6027, //  3: out    x, 7                       
+    0x002d, //  4: jmp    !x, 13                     
     0x4078, //  5: in     null, 24                   
     0x3f20, //  6: wait   0 pin, 0               [31]
     0x4001, //  7: in     pins, 1                    
@@ -30,19 +30,18 @@ static const uint16_t n64out_program_instructions[] = {
     0x00e6, // 10: jmp    !osre, 6                   
     0x8020, // 11: push   block                      
     0x0000, // 12: jmp    0                          
-    0x6061, // 13: out    null, 1                    
-    0x6067, // 14: out    null, 7                    
-    0xef81, // 15: set    pindirs, 1             [15]
-    0x7f81, // 16: out    pindirs, 1             [31]
-    0xee80, // 17: set    pindirs, 0             [14]
-    0x00ef, // 18: jmp    !osre, 15                  
+    0x6067, // 13: out    null, 7                    
+    0xef81, // 14: set    pindirs, 1             [15]
+    0x7f81, // 15: out    pindirs, 1             [31]
+    0xee80, // 16: set    pindirs, 0             [14]
+    0x00ee, // 17: jmp    !osre, 14                  
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
 static const struct pio_program n64out_program = {
     .instructions = n64out_program_instructions,
-    .length = 19,
+    .length = 18,
     .origin = -1,
 };
 

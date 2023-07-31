@@ -4,9 +4,9 @@
 wrap_target:
 
 pull block
-out x 16
+out x 17
 jmp !x outnext_start
-out x 8
+out x 7
 jmp !x write_single
 
 ;doread:
@@ -22,7 +22,6 @@ jmp wrap_target
 
 ; output stop-bit instead of real bit
 outnext_start:
-out null 1
 write_single:
 out null 7
 outnext:
