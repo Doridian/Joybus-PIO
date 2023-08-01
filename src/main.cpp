@@ -11,11 +11,6 @@ void setup() {
 void setup1() {
   Serial.begin(115200);
   Serial.println("HI");
-
-  gpio_set_dir(PIN_CTR, GPIO_IN);
-  gpio_disable_pulls(PIN_CTR);
-  gpio_set_oeover(PIN_CTR, GPIO_OVERRIDE_INVERT);
-  gpio_set_outover(PIN_CTR, GPIO_OVERRIDE_LOW);
   
   offset = pio_add_program(pio0, &n64out_program);
   n64out_program_init(pio0, 0, offset, PIN_CTR);
@@ -111,7 +106,7 @@ void loop1() {
     return;
   }
 
-  for (int a = 0; a < BLOCK_COUNT; a++) {
+  for (int a = 0; a < 5; a++) {
     uint32_t addr = make_address(a);
 
     /*delay(1);
