@@ -17,7 +17,7 @@ mov y isr ; and load to Y
 
 jmp !x skip_write
 
-jmp x-- first_write ; plain decrement X
+jmp x-- first_write ; plain decrement X, jump always taken
  ; MUST SUBTRACT 11 CYCLES
  next_write:
     set pindirs, 0 [10] ; waste 11 cycles
@@ -37,7 +37,7 @@ set pindirs, 0 [15]
 
 ; start read routine
 mov isr null
-jmp y-- next_read ; plain decrement Y
+jmp y-- next_read ; plain decrement Y, jump always taken
 next_read:
     wait 0 pin 0 [31] ; wait for gamepad LOW assertion
     in pins 1
