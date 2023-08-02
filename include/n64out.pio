@@ -1,37 +1,46 @@
 .program n64out
 
-
 .wrap_target
 wrap_target:
 
 pull block
-out x 17
-jmp !x outnext_start
-out x 7
-jmp !x write_single
 
-;doread:
-in null 24
-nextread:
+mov isr null
+out isr 2 ; ISR now contains payload len bytes
+in null 3 ; shift by 3
+mov x isr ; and load to X
+
+mov isr null
+out isr 6 ; ISR now contains response len bytes
+in null 3 ; shift by 3
+mov y isr ; and load to Y
+
+jmp !x skip_write
+
+jmp x-- next_write ; plain decrement X
+next_write:
+    set pindirs, 1 [15] ; assert low
+    out pindirs, 1 [31] ; set to target bit
+    set pindirs, 0 [14] ; de-assert, only 14 delay because of jmp taking one cycle
+    jmp x-- next_write
+
+skip_write:
+jmp !y wrap_target
+
+; write stop-bit
+set pindirs, 1 [15]
+set pindirs, 0 [15]
+
+; start read routine
+mov isr null
+jmp y-- next_read ; plain decrement Y
+next_read:
     wait 0 pin 0 [31] ; wait for gamepad LOW assertion
     in pins 1
     wait 1 pin 0 ; wait for gamepad HIGH/release
-    out null 1
-    jmp !osre nextread
+    jmp y-- next_read
 push
-jmp wrap_target
-
-; output stop-bit instead of real bit
-outnext_start:
-write_single:
-out null 7
-outnext:
-    ; wait loop for Y 
-    set pindirs, 1 [15]
-    ; set to low if we are on a low bit
-    out pindirs, 1 [31]
-    set pindirs, 0 [14] ; only 14 delay because of jmp taking one cycle
-    jmp !osre outnext
+; fall-through to wrap_target
 
 % c-sdk {
 static inline void n64out_program_init(PIO pio, uint sm, uint offset, uint pin) {
@@ -48,14 +57,12 @@ static inline void n64out_program_init(PIO pio, uint sm, uint offset, uint pin) 
     sm_config_set_set_pins(&c, pin, 1);
 
     sm_config_set_out_shift(&c, false, false, 32);
-    sm_config_set_in_shift(&c, false, false, 32);
+    sm_config_set_in_shift(&c, false, true, 32);
     
     float frac = (clock_get_hz(clk_sys) / 1000000) / 16;
     sm_config_set_clkdiv(&c, frac);
 
     pio_gpio_init(pio, pin);
-    pio_sm_clear_fifos(pio, sm);
-    pio_sm_set_pins(pio, sm, 0);
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
 
     // Load our configuration, and jump to the start of the program

@@ -3,6 +3,8 @@
 
 #define PIN_CTR 16
 
+#define PAYLOAD_PACKET_MAX 3
+
 uint offset;
 void setup() {
 
@@ -16,47 +18,44 @@ void setup1() {
   n64out_program_init(pio0, 0, offset, PIN_CTR);
 }
 
-static void tx_byte(byte b) {
-  uint32_t msg = b;
+static void _tx_data(byte* payload, uint8_t payload_len, uint8_t response_len) {
   while (pio_sm_is_tx_fifo_full(pio0, 0)) {
     tight_loop_contents();
   }
-  pio0->txf[0] = msg ^ 0xFF;
+
+  uint8_t data[4] = { ~payload[2], ~payload[1], ~payload[0], (payload_len << 6) | response_len };
+  pio0->txf[0] = *(uint32_t*)data;
 }
 
-static void tx_stopbit() {
-  while (pio_sm_is_tx_fifo_full(pio0, 0)) {
-    tight_loop_contents();
-  }
-  pio0->txf[0] = 0xFF0000FF;
-}
-
-static int rx_bytes(int count, byte output[]) {
-  while (pio_sm_is_tx_fifo_full(pio0, 0)) {
-    tight_loop_contents();
+static int tx_data(byte payload[], byte response[], int payload_len, int response_len) {
+  byte* payload_cur = payload;
+  while (payload_len > PAYLOAD_PACKET_MAX) {
+    _tx_data(payload_cur, PAYLOAD_PACKET_MAX, 0);
+    payload_cur += PAYLOAD_PACKET_MAX;
+    payload_len -= PAYLOAD_PACKET_MAX;
   }
 
-  pio0->txf[0] = 0xFFFFFFFF;
-  for (int i = 0; i < count; i++) {
-    if (i < count - 1) {
-      while (pio_sm_is_tx_fifo_full(pio0, 0)) {
-        tight_loop_contents();
-      }
-      pio0->txf[0] = 0xFFFFFFFF;
-    }
+  byte* response_cur = response;
+  _tx_data(payload_cur, payload_len, response_len);
+  while (response_len > 0) {
     io_ro_32 *rxfifo_shift = (io_ro_32*)&pio0->rxf[0];
+
     unsigned long start = millis();
     while (pio_sm_is_rx_fifo_empty(pio0, 0)) {
       if ((millis() - start) > 10) {
         n64out_program_init(pio0, 0, offset, PIN_CTR);
-        return 0;
+        return -1;
       }
     }
 
-    output[i] = (*rxfifo_shift) & 0xFF;
+    Serial.println(*(uint32_t*)rxfifo_shift, HEX);
+
+    *response_cur = *rxfifo_shift;
+    response_cur += 4;
+    response_len -= 4;
   }
 
-  return count;
+  return response_cur - response;
 }
 
 uint8_t address_xor_table[] = {
@@ -80,20 +79,18 @@ uint32_t make_address(int pos) {
 #define BLOCK_COUNT (PAK_SIZE/BLOCK_SIZE)
 
 void loop1() {
+  byte payload[64] = {};
   byte res[64] = {};
 
   delay(1000);
   Serial.print("Initializing...");
-  tx_byte(0x00);
-  Serial.print("Receiving: ");
-  
-  uint32_t intstatus = save_and_disable_interrupts();
-  tx_stopbit();
-  int res_size = rx_bytes(3, res);
-  restore_interrupts(intstatus);
-  if (!res_size) {
+  payload[0] = 0xFF;
+  int res_size = tx_data(payload, res, 1, 3);
+  if (res_size <= 0) {
+    Serial.println(res_size);
     return;
   }
+  Serial.print("Receiving: ");
   Serial.print(res[0], HEX);
   Serial.print(" ");
   Serial.print(res[1], HEX);
@@ -127,6 +124,7 @@ void loop1() {
 
     delay(1);
 
+    /*
     Serial.print("Reading... | ");
     Serial.print(a, HEX);
     Serial.print(" | ");
@@ -145,6 +143,7 @@ void loop1() {
       Serial.print(" ");
     }
     Serial.println("| Done!");
+    */
   }
 }
 
