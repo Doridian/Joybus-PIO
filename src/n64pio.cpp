@@ -28,22 +28,29 @@ N64PIOInstance n64pio_program_init(PIO pio, uint sm, uint pin) {
   instance.offset = OFFSET_NOT_LOADED;
 
   pio_sm_set_enabled(instance.pio, instance.sm, false);
+
   gpio_set_dir(instance.pin, GPIO_IN);
   gpio_disable_pulls(instance.pin);
   gpio_set_oeover(instance.pin, GPIO_OVERRIDE_HIGH);
   gpio_set_outover(instance.pin, GPIO_OVERRIDE_LOW);
+
   instance.config = n64pio_program_get_default_config(instance.offset);
   sm_config_set_in_pins(&instance.config, instance.pin);
   sm_config_set_out_pins(&instance.config, instance.pin, 1);
   sm_config_set_set_pins(&instance.config, instance.pin, 1);
+
   sm_config_set_out_shift(&instance.config, false, false, 32);
   sm_config_set_in_shift(&instance.config, false, true, 32);
+
   float frac = (clock_get_hz(clk_sys) / 1000000) / 16;
   sm_config_set_clkdiv(&instance.config, frac);
+
   pio_gpio_init(instance.pio, instance.pin);
   pio_sm_set_consecutive_pindirs(instance.pio, instance.sm, instance.pin, 1, false);
+
   // Load our configuration, and jump to the start of the program
   pio_sm_init(instance.pio, instance.sm, instance.offset, &instance.config);
+
   pio_sm_set_enabled(instance.pio, instance.sm, true);
 
   return instance;
