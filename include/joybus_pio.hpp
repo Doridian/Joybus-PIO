@@ -14,7 +14,7 @@ typedef struct JoybusPIOInstance {
     pio_sm_config config;
 } JoybusPIOInstance;
 
-typedef struct JoybusControllerInfo {
+typedef struct __attribute__((__packed__))  JoybusControllerInfo {
     uint16_t type;
     uint8_t aux;
 } JoybusControllerInfo;
