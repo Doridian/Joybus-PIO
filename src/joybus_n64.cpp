@@ -1,4 +1,4 @@
-#include "joybus_n64_utils.hpp"
+#include "joybus_n64.hpp"
 #include "joybus_pio.hpp"
 #include <string.h>
 

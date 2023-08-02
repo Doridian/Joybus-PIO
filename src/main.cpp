@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "joybus_pio.hpp"
-#include "joybus_n64_utils.hpp"
+#include "joybus_n64.hpp"
 
 JoybusPIOInstance joybus_pio;
 void setup() {
@@ -79,14 +79,3 @@ void loop1() {
 }
 
 void loop() { }
-
-/*
-// 0 = low 3us, high 1us
-// 1 = low 1us, high 3us
-
-// When line pulled low, wait 2us, sample, wait 2us, total 4us
-// IDENT | 0x00 |  0 | 3
-// INPUT | 0x01 |  0 | 4
-// RDMEM | 0x02 |  2 | 32
-// WRMEM | 0x03 | 34 | 1/2?
-*/
