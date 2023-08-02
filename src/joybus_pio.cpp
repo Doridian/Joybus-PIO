@@ -69,7 +69,7 @@ static void tx_data(JoybusPIOInstance instance, uint8_t* payload, uint8_t payloa
   instance.pio->txf[instance.sm] = data;
 }
 
-int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[], uint8_t response[], int payload_len, int response_len) {
+int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[], int payload_len, uint8_t response[], int response_len) {
   uint8_t* payload_cur = payload;
   while (payload_len > PAYLOAD_PACKET_MAX) {
     tx_data(instance, payload_cur, PAYLOAD_PACKET_MAX, 0);

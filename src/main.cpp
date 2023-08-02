@@ -23,7 +23,7 @@ void loop1() {
   delay(1000);
   Serial.print("Initializing...");
   payload[0] = 0x00;
-  int res_size = joybus_pio_transmit_receive(joybus_pio, payload, res, 1, 3);
+  int res_size = joybus_pio_transmit_receive(joybus_pio, payload, 1, res, 3);
   if (res_size <= 0) {
     Serial.println(res_size);
     return;
