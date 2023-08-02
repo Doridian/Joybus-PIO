@@ -41,6 +41,9 @@ int n64pio_read_memory(N64PIOInstance instance, uint address, uint8_t response[]
   uint8_t payload[3] = { 0x02, (uint8_t)(address_checksummed >> 8), (uint8_t)(address_checksummed & 0xFF) };
   int len = n64pio_transmit_receive(instance, payload, response, 3, N64_BLOCK_SIZE+1);
   if (len != N64_BLOCK_SIZE+1) {
+    if (len < 0) {
+      return len;
+    }
     return -2;
   }
   if (make_data_checksum(response) != response[N64_BLOCK_SIZE+1]) {

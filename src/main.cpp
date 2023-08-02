@@ -71,7 +71,7 @@ void loop1() {
       Serial.println(res_size);
       return;
     }
-    for (int i = 0; i < N64_BLOCK_SIZE+1; i++) {
+    for (int i = 0; i < N64_BLOCK_SIZE; i++) {
       Serial.print(res[i], HEX);
       Serial.print(" ");
     }
