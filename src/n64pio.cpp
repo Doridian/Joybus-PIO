@@ -76,7 +76,7 @@ static void tx_data(N64PIOInstance instance, byte* payload, uint8_t payload_len,
   instance.pio->txf[instance.sm] = data;
 }
 
-int transmit_receive(N64PIOInstance instance, byte payload[], byte response[], uint payload_len, uint response_len) {
+int n64pio_transmit_receive(N64PIOInstance instance, byte payload[], byte response[], uint payload_len, uint response_len) {
   byte* payload_cur = payload;
   while (payload_len > PAYLOAD_PACKET_MAX) {
     tx_data(instance, payload_cur, PAYLOAD_PACKET_MAX, 0);

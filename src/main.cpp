@@ -42,7 +42,7 @@ void loop1() {
   delay(1000);
   Serial.print("Initializing...");
   payload[0] = 0x00;
-  int res_size = transmit_receive(n64pio, payload, res, 1, 3);
+  int res_size = n64pio_transmit_receive(n64pio, payload, res, 1, 3);
   if (res_size <= 0) {
     Serial.println(res_size);
     return;
@@ -101,7 +101,7 @@ void loop1() {
     payload[0] = 0x02;
     payload[1] = addr >> 8;
     payload[2] = addr & 0xFF;
-    res_size = transmit_receive(n64pio, payload, res, 3, BLOCK_SIZE+1);
+    res_size = n64pio_transmit_receive(n64pio, payload, res, 3, BLOCK_SIZE+1);
     if (!res_size) {
       Serial.println(res_size);
       return;

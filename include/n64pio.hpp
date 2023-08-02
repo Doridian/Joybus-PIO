@@ -15,4 +15,4 @@ typedef struct N64PIOInstance {
 } N64PIOInstance;
 
 N64PIOInstance n64pio_program_init(PIO pio, uint sm, uint pin);
-int transmit_receive(N64PIOInstance instance, byte payload[], byte response[], uint payload_len, uint response_len);
+int n64pio_transmit_receive(N64PIOInstance instance, byte payload[], byte response[], uint payload_len, uint response_len);
