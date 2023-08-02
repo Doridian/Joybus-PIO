@@ -42,31 +42,24 @@ void loop1() {
   }
 
   for (int a = 0; a < 5; a++) {
-    /*
     delay(1);
 
     Serial.print("Writing... | ");
     Serial.print(a, HEX);
     Serial.print(" | ");
-    payload[0] = 0x03;
-    payload[1] = addr >> 8;
-    payload[2] = addr & 0xFF;
-    for (int i = 0; i < BLOCK_SIZE+1; i++) {
-      
-      payload[i + 3] = (i % 2 == 0) ? 0x55 : 0xAA;
-      //payload[i + 3] = 0x00;
+    for (int i = 0; i < N64_BLOCK_SIZE; i++) {
+      payload[i] = (i % 2 == 0) ? 0x55 : 0xAA;
       Serial.print(".");
     }
-    payload[BLOCK_SIZE+1+3] = 0x5F;
-    //payload[BLOCK_SIZE+1+3] = 0x00;
-    res_size = tx_data(payload, res, BLOCK_SIZE+1+3, 1);
+    payload[0] = a & 0xFF;
+    payload[1] = (a >> 8) & 0xFF;
+    /*res_size = n64pio_write_memory(n64pio, a, payload);
     if (!res_size) {
       Serial.println(res_size);
       return;
-    }
+    }*/
     Serial.print("!");
     Serial.println("| Done!");
-    */
 
     delay(1);
 
