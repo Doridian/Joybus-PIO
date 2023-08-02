@@ -15,17 +15,37 @@ void setup1() {
   joybus_pio = joybus_pio_program_init(pio0, 0, 16);
 }
 
+bool inited = false;
+
 void loop1() {
-  delay(1000);
-  Serial.print("Initializing...");
-  JoybusControllerInfo info = joybus_init(joybus_pio, true);
-  Serial.print(" Type: ");
-  Serial.print(info.type, HEX);
-  Serial.print(" Aux: ");
-  Serial.print(info.aux, HEX);
+  if (!inited) {
+    delay(1000);
+    Serial.print("Initializing...");
+    JoybusControllerInfo info = joybus_init(joybus_pio, true);
+    Serial.print(" Type: ");
+    Serial.print(info.type, HEX);
+    Serial.print(" Aux: ");
+    Serial.print(info.aux, HEX);
+    Serial.println(" Done!");
+
+    if (info.type != 0x0500) {
+      return;
+    }
+    inited = true;
+  }
+
+  delay(100);
+  Serial.print("Querying... ");
+  N64ControllerState state = joybus_n64_read_controller(joybus_pio);
+  Serial.print("Buttons: ");
+  Serial.print(state.buttons, BIN);
+  Serial.print(" Joystick X: ");
+  Serial.print(state.joystick_x, DEC);
+  Serial.print(" Joystick Y: ");
+  Serial.print(state.joystick_y, DEC);
   Serial.println(" Done!");
 
-  if (info.type != 0x0500) {
+  if (true) {
     return;
   }
 

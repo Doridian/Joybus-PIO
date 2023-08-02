@@ -43,6 +43,7 @@ next_read:
     in pins 1
     wait 1 pin 0 ; wait for gamepad HIGH/release
     jmp y-- next_read
-push
+in null 8 ; we need 3 instructions here
+in null 8 ; due to the push direction of the register
+in null 8 ; otherwise we get really messed up alignment
 ; fall-through to wrap_target
-

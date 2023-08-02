@@ -58,7 +58,7 @@ void joybus_pio_reset(JoybusPIOInstance instance) {
 
 static void tx_data(JoybusPIOInstance instance, uint8_t* payload, uint8_t payload_len, uint8_t response_len) {
   while (pio_sm_is_tx_fifo_full(instance.pio, instance.sm)) {
-    tight_loop_contents();
+    delay(1);
   }
 
   uint32_t data = ((payload_len >= 3) ? (payload[2] << 0) : 0) |
@@ -77,26 +77,25 @@ int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[], i
     payload_len -= PAYLOAD_PACKET_MAX;
   }
 
+  int rxfifo_res;
   uint8_t* response_cur = response;
+  unsigned long start; uint32_t rxfifo_data; io_ro_32* rxfifo_shift;
   tx_data(instance, payload_cur, payload_len, response_len);
   while (response_len > 0) {
-    io_ro_32 *rxfifo_shift = (io_ro_32*)&instance.pio->rxf[instance.sm];
-
-    unsigned long start = millis();
+    rxfifo_shift = (io_ro_32*)&instance.pio->rxf[instance.sm];
+    start = millis();
     while (pio_sm_is_rx_fifo_empty(instance.pio, instance.sm)) {
       if ((millis() - start) > 10) {
         joybus_pio_reset(instance);
         return -1;
       }
     }
+    rxfifo_data = *rxfifo_shift;
 
-    uint32_t rxfifo_data = *rxfifo_shift;
-
-    int i = (response_len > 3) ? 32 : (response_len << 3);
-    while ((i -= 8) >= 0) {
+    int i = 32;
+    while (response_len-- > 0 && (i -= 8) >= 0) {
       *(response_cur++) = (rxfifo_data >> i) & 0xFF;
     }
-    response_len -= 4;
   }
 
   return response_cur - response;

@@ -13,7 +13,7 @@
 // ---------- //
 
 #define joybus_pio_wrap_target 0
-#define joybus_pio_wrap 26
+#define joybus_pio_wrap 28
 
 static const uint16_t joybus_pio_program_instructions[] = {
             //     .wrap_target
@@ -43,14 +43,16 @@ static const uint16_t joybus_pio_program_instructions[] = {
     0x4001, // 23: in     pins, 1                    
     0x20a0, // 24: wait   1 pin, 0                   
     0x0096, // 25: jmp    y--, 22                    
-    0x8020, // 26: push   block                      
+    0x4068, // 26: in     null, 8                    
+    0x4068, // 27: in     null, 8                    
+    0x4068, // 28: in     null, 8                    
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
 static const struct pio_program joybus_pio_program = {
     .instructions = joybus_pio_program_instructions,
-    .length = 27,
+    .length = 29,
     .origin = -1,
 };
 
