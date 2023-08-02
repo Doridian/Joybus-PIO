@@ -9,13 +9,13 @@
 #endif
 
 // ------ //
-// n64out //
+// n64pio //
 // ------ //
 
-#define n64out_wrap_target 0
-#define n64out_wrap 26
+#define n64pio_wrap_target 0
+#define n64pio_wrap 26
 
-static const uint16_t n64out_program_instructions[] = {
+static const uint16_t n64pio_program_instructions[] = {
             //     .wrap_target
     0x80a0, //  0: pull   block                      
     0xa0c3, //  1: mov    isr, null                  
@@ -48,37 +48,15 @@ static const uint16_t n64out_program_instructions[] = {
 };
 
 #if !PICO_NO_HARDWARE
-static const struct pio_program n64out_program = {
-    .instructions = n64out_program_instructions,
+static const struct pio_program n64pio_program = {
+    .instructions = n64pio_program_instructions,
     .length = 27,
     .origin = -1,
 };
 
-static inline pio_sm_config n64out_program_get_default_config(uint offset) {
+static inline pio_sm_config n64pio_program_get_default_config(uint offset) {
     pio_sm_config c = pio_get_default_sm_config();
-    sm_config_set_wrap(&c, offset + n64out_wrap_target, offset + n64out_wrap);
+    sm_config_set_wrap(&c, offset + n64pio_wrap_target, offset + n64pio_wrap);
     return c;
 }
-
-static inline void n64out_program_init(PIO pio, uint sm, uint offset, uint pin) {
-    pio_sm_set_enabled(pio, sm, false);
-    gpio_set_dir(pin, GPIO_IN);
-    gpio_disable_pulls(pin);
-    gpio_set_oeover(pin, GPIO_OVERRIDE_HIGH);
-    gpio_set_outover(pin, GPIO_OVERRIDE_LOW);
-    pio_sm_config c = n64out_program_get_default_config(offset);
-    sm_config_set_in_pins(&c, pin);
-    sm_config_set_out_pins(&c, pin, 1);
-    sm_config_set_set_pins(&c, pin, 1);
-    sm_config_set_out_shift(&c, false, false, 32);
-    sm_config_set_in_shift(&c, false, true, 32);
-    float frac = (clock_get_hz(clk_sys) / 1000000) / 16;
-    sm_config_set_clkdiv(&c, frac);
-    pio_gpio_init(pio, pin);
-    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
-    // Load our configuration, and jump to the start of the program
-    pio_sm_init(pio, sm, offset, &c);
-    pio_sm_set_enabled(pio, sm, true);
-}
-
 #endif

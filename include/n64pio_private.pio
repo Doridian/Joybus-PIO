@@ -1,4 +1,4 @@
-.program n64out
+.program n64pio
 
 .wrap_target
 wrap_target:
@@ -46,32 +46,3 @@ next_read:
 push
 ; fall-through to wrap_target
 
-% c-sdk {
-static inline void n64out_program_init(PIO pio, uint sm, uint offset, uint pin) {
-    pio_sm_set_enabled(pio, sm, false);
-
-    gpio_set_dir(pin, GPIO_IN);
-    gpio_disable_pulls(pin);
-    gpio_set_oeover(pin, GPIO_OVERRIDE_HIGH);
-    gpio_set_outover(pin, GPIO_OVERRIDE_LOW);
-
-    pio_sm_config c = n64out_program_get_default_config(offset);
-    sm_config_set_in_pins(&c, pin);
-    sm_config_set_out_pins(&c, pin, 1);
-    sm_config_set_set_pins(&c, pin, 1);
-
-    sm_config_set_out_shift(&c, false, false, 32);
-    sm_config_set_in_shift(&c, false, true, 32);
-    
-    float frac = (clock_get_hz(clk_sys) / 1000000) / 16;
-    sm_config_set_clkdiv(&c, frac);
-
-    pio_gpio_init(pio, pin);
-    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
-
-    // Load our configuration, and jump to the start of the program
-    pio_sm_init(pio, sm, offset, &c);
-
-    pio_sm_set_enabled(pio, sm, true);
-}
-%}

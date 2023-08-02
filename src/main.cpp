@@ -1,9 +1,9 @@
 #include <Arduino.h>
-#include "n64out.h"
 
-#define PIN_CTR 16
+#include "n64pio.hpp"
 
-#define PAYLOAD_PACKET_MAX 3
+#define PIN_CONTROLLER 16
+#define CONTROLLER_PIO pio0
 
 uint offset;
 void setup() {
@@ -14,51 +14,8 @@ void setup1() {
   Serial.begin(115200);
   Serial.println("HI");
   
-  offset = pio_add_program(pio0, &n64out_program);
-  n64out_program_init(pio0, 0, offset, PIN_CTR);
-}
-
-static void _tx_data(byte* payload, uint8_t payload_len, uint8_t response_len) {
-  while (pio_sm_is_tx_fifo_full(pio0, 0)) {
-    tight_loop_contents();
-  }
-
-  uint32_t data = (payload[2] << 0) | (payload[1] << 8) | (payload[0] << 16) | (payload_len << (6+24)) | response_len << 24;
-  data ^= 0x00FFFFFF; // Invert payload
-  pio0->txf[0] = data;
-}
-
-static int tx_data(byte payload[], byte response[], int payload_len, int response_len) {
-  byte* payload_cur = payload;
-  while (payload_len > PAYLOAD_PACKET_MAX) {
-    _tx_data(payload_cur, PAYLOAD_PACKET_MAX, 0);
-    payload_cur += PAYLOAD_PACKET_MAX;
-    payload_len -= PAYLOAD_PACKET_MAX;
-  }
-
-  byte* response_cur = response;
-  _tx_data(payload_cur, payload_len, response_len);
-  while (response_len > 0) {
-    io_ro_32 *rxfifo_shift = (io_ro_32*)&pio0->rxf[0];
-
-    unsigned long start = millis();
-    while (pio_sm_is_rx_fifo_empty(pio0, 0)) {
-      if ((millis() - start) > 10) {
-        n64out_program_init(pio0, 0, offset, PIN_CTR);
-        return -1;
-      }
-    }
-
-    uint32_t rxfifo_data = *rxfifo_shift;
-
-    int i = (response_len > 3) ? 32 : (response_len << 3);
-    while ((i -= 8) >= 0) {
-      *(response_cur++) = (rxfifo_data >> i) & 0xFF;
-    }
-    response_len -= 4;
-  }
-
-  return (byte*)response_cur - response;
+  offset = n64pio_add_program(CONTROLLER_PIO);
+  n64pio_program_init(CONTROLLER_PIO, 0, offset, PIN_CONTROLLER);
 }
 
 uint8_t address_xor_table[] = {
@@ -84,11 +41,12 @@ uint32_t make_address(int pos) {
 void loop1() {
   byte payload[64] = {};
   byte res[64] = {};
+  const uint sm = 0;
 
   delay(1000);
   Serial.print("Initializing...");
   payload[0] = 0x00;
-  int res_size = tx_data(payload, res, 1, 3);
+  int res_size = transmit_receive(CONTROLLER_PIO, sm, payload, res, 1, 3);
   if (res_size <= 0) {
     Serial.println(res_size);
     return;
@@ -147,7 +105,7 @@ void loop1() {
     payload[0] = 0x02;
     payload[1] = addr >> 8;
     payload[2] = addr & 0xFF;
-    res_size = tx_data(payload, res, 3, BLOCK_SIZE+1);
+    res_size = transmit_receive(CONTROLLER_PIO, sm, payload, res, 3, BLOCK_SIZE+1);
     if (!res_size) {
       Serial.println(res_size);
       return;
@@ -223,9 +181,9 @@ int send_command(const byte cmd, const byte data[], const int data_len, byte res
 
   // Every command "drives" high, so relinquishes the bus for input mode, now we just need to clock the data in...
   while (result_bits_left--) {
-    while(gpio_get(PIN_CTR)); // Wait for controller to reply
+    while(gpio_get(PIN_CONTROLLER)); // Wait for controller to reply
     const unsigned long start = micros();
-    while(!gpio_get(PIN_CTR));
+    while(!gpio_get(PIN_CONTROLLER));
     const unsigned long duration = micros() - start;
     if (duration > 2) {
       *result_bits_ptr = 1;
