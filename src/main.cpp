@@ -2,10 +2,7 @@
 
 #include "n64pio.hpp"
 
-#define PIN_CONTROLLER 16
-#define CONTROLLER_PIO pio0
-
-uint offset;
+N64PIOInstance n64pio;
 void setup() {
 
 }
@@ -14,8 +11,7 @@ void setup1() {
   Serial.begin(115200);
   Serial.println("HI");
   
-  offset = n64pio_add_program(CONTROLLER_PIO);
-  n64pio_program_init(CONTROLLER_PIO, 0, offset, PIN_CONTROLLER);
+  n64pio = n64pio_program_init(pio0, 0, 16);
 }
 
 uint8_t address_xor_table[] = {
@@ -46,7 +42,7 @@ void loop1() {
   delay(1000);
   Serial.print("Initializing...");
   payload[0] = 0x00;
-  int res_size = transmit_receive(CONTROLLER_PIO, sm, payload, res, 1, 3);
+  int res_size = transmit_receive(n64pio, payload, res, 1, 3);
   if (res_size <= 0) {
     Serial.println(res_size);
     return;
@@ -105,7 +101,7 @@ void loop1() {
     payload[0] = 0x02;
     payload[1] = addr >> 8;
     payload[2] = addr & 0xFF;
-    res_size = transmit_receive(CONTROLLER_PIO, sm, payload, res, 3, BLOCK_SIZE+1);
+    res_size = transmit_receive(n64pio, payload, res, 3, BLOCK_SIZE+1);
     if (!res_size) {
       Serial.println(res_size);
       return;

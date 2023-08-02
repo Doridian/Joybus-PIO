@@ -2,6 +2,7 @@
     "files.associations": {
         "pio.h": "c",
         "n64pio_private.h": "c",
-        "arduino.h": "c"
+        "arduino.h": "c",
+        "random": "cpp"
     }
 }

@@ -4,34 +4,60 @@
 #include "n64pio_private.h"
 
 #define PAYLOAD_PACKET_MAX 3
+#define OFFSET_NOT_LOADED 0xFFFFFFFF
+#define PIO_INDEX(instance) ((instance.pio == pio0) ? 0 : 1)
 
-int n64pio_add_program(PIO pio) {
-  return pio_add_program(pio, &n64pio_program);
+uint n64pio_offsets[2] = {OFFSET_NOT_LOADED, OFFSET_NOT_LOADED};
+
+static int n64pio_add_program(N64PIOInstance instance) {
+  if (instance.offset == OFFSET_NOT_LOADED) {
+    instance.offset = n64pio_offsets[PIO_INDEX(instance)];
+    if (instance.offset == OFFSET_NOT_LOADED) {
+      instance.offset = pio_add_program(instance.pio, &n64pio_program);
+      n64pio_offsets[PIO_INDEX(instance)] = instance.offset;
+    }
+  }
+  return pio_add_program(instance.pio, &n64pio_program);
 }
 
-void n64pio_program_init(PIO pio, uint sm, uint offset, uint pin) {
-    pio_sm_set_enabled(pio, sm, false);
-    gpio_set_dir(pin, GPIO_IN);
-    gpio_disable_pulls(pin);
-    gpio_set_oeover(pin, GPIO_OVERRIDE_HIGH);
-    gpio_set_outover(pin, GPIO_OVERRIDE_LOW);
-    pio_sm_config c = n64pio_program_get_default_config(offset);
-    sm_config_set_in_pins(&c, pin);
-    sm_config_set_out_pins(&c, pin, 1);
-    sm_config_set_set_pins(&c, pin, 1);
-    sm_config_set_out_shift(&c, false, false, 32);
-    sm_config_set_in_shift(&c, false, true, 32);
-    float frac = (clock_get_hz(clk_sys) / 1000000) / 16;
-    sm_config_set_clkdiv(&c, frac);
-    pio_gpio_init(pio, pin);
-    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
-    // Load our configuration, and jump to the start of the program
-    pio_sm_init(pio, sm, offset, &c);
-    pio_sm_set_enabled(pio, sm, true);
+N64PIOInstance n64pio_program_init(PIO pio, uint sm, uint pin) {
+  N64PIOInstance instance;
+  instance.pio = pio;
+  instance.sm = sm;
+  instance.pin = pin;
+  instance.offset = OFFSET_NOT_LOADED;
+
+  pio_sm_set_enabled(instance.pio, instance.sm, false);
+  gpio_set_dir(instance.pin, GPIO_IN);
+  gpio_disable_pulls(instance.pin);
+  gpio_set_oeover(instance.pin, GPIO_OVERRIDE_HIGH);
+  gpio_set_outover(instance.pin, GPIO_OVERRIDE_LOW);
+  instance.config = n64pio_program_get_default_config(instance.offset);
+  sm_config_set_in_pins(&instance.config, instance.pin);
+  sm_config_set_out_pins(&instance.config, instance.pin, 1);
+  sm_config_set_set_pins(&instance.config, instance.pin, 1);
+  sm_config_set_out_shift(&instance.config, false, false, 32);
+  sm_config_set_in_shift(&instance.config, false, true, 32);
+  float frac = (clock_get_hz(clk_sys) / 1000000) / 16;
+  sm_config_set_clkdiv(&instance.config, frac);
+  pio_gpio_init(instance.pio, instance.pin);
+  pio_sm_set_consecutive_pindirs(instance.pio, instance.sm, instance.pin, 1, false);
+  // Load our configuration, and jump to the start of the program
+  pio_sm_init(instance.pio, instance.sm, instance.offset, &instance.config);
+  pio_sm_set_enabled(instance.pio, instance.sm, true);
+
+  return instance;
 }
 
-static void _tx_data(PIO pio, uint sm, byte* payload, uint8_t payload_len, uint8_t response_len) {
-  while (pio_sm_is_tx_fifo_full(pio, sm)) {
+void n64pio_reset(N64PIOInstance instance) {
+  pio_sm_set_enabled(instance.pio, instance.sm, false);
+  pio_sm_init(instance.pio, instance.sm, instance.offset, &instance.config);
+  pio_sm_set_consecutive_pindirs(instance.pio, instance.sm, instance.pin, 1, false);
+  pio_sm_set_enabled(instance.pio, instance.sm, true);
+}
+
+static void tx_data(N64PIOInstance instance, byte* payload, uint8_t payload_len, uint8_t response_len) {
+  while (pio_sm_is_tx_fifo_full(instance.pio, instance.sm)) {
     tight_loop_contents();
   }
 
@@ -40,26 +66,26 @@ static void _tx_data(PIO pio, uint sm, byte* payload, uint8_t payload_len, uint8
                   ((payload_len >= 1) ? (payload[0] << 16) : 0) |
                   (payload_len << (6+24)) | response_len << 24;
   data ^= 0x00FFFFFF; // Invert payload
-  pio->txf[sm] = data;
+  instance.pio->txf[instance.sm] = data;
 }
 
-int transmit_receive(PIO pio, uint sm, byte payload[], byte response[], uint payload_len, uint response_len) {
+int transmit_receive(N64PIOInstance instance, byte payload[], byte response[], uint payload_len, uint response_len) {
   byte* payload_cur = payload;
   while (payload_len > PAYLOAD_PACKET_MAX) {
-    _tx_data(pio, sm, payload_cur, PAYLOAD_PACKET_MAX, 0);
+    tx_data(instance, payload_cur, PAYLOAD_PACKET_MAX, 0);
     payload_cur += PAYLOAD_PACKET_MAX;
     payload_len -= PAYLOAD_PACKET_MAX;
   }
 
   byte* response_cur = response;
-  _tx_data(pio, sm, payload_cur, payload_len, response_len);
+  tx_data(instance, payload_cur, payload_len, response_len);
   while (response_len > 0) {
-    io_ro_32 *rxfifo_shift = (io_ro_32*)&pio->rxf[0];
+    io_ro_32 *rxfifo_shift = (io_ro_32*)&instance.pio->rxf[0];
 
     unsigned long start = millis();
-    while (pio_sm_is_rx_fifo_empty(pio, 0)) {
+    while (pio_sm_is_rx_fifo_empty(instance.pio, 0)) {
       if ((millis() - start) > 10) {
-        // n64pio_program_init(pio, 0, offset, PIN_CONTROLLER);
+        n64pio_reset(instance);
         return -1;
       }
     }
