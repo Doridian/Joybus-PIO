@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "n64pio.hpp"
+#include "n64pio_utils.hpp"
 
 N64PIOInstance n64pio;
 void setup() {
@@ -14,29 +15,9 @@ void setup1() {
   n64pio = n64pio_program_init(pio0, 0, 16);
 }
 
-uint8_t address_xor_table[] = {
-  0x01, 0x1A, 0x0D, 0x1C, 0x0E, 0x07, 0x19, 0x16, 0x0B, 0x1F, 0x15
-};
-
-uint32_t make_address(int pos) {
-  uint32_t rpos = pos << 5; // 32?
-  uint8_t csum = 0x00;
-  for (int i = 15; i >= 5; i--) {
-    if (rpos & (0b1 << i)) {
-      csum ^= address_xor_table[15-i];
-    }
-  }
-  rpos |= csum;
-  return rpos;
-}
-
-#define PAK_SIZE (32*1024)
-#define BLOCK_SIZE 32
-#define BLOCK_COUNT (PAK_SIZE/BLOCK_SIZE)
-
 void loop1() {
-  byte payload[64] = {};
-  byte res[64] = {};
+  uint8_t payload[64] = {};
+  uint8_t res[64] = {};
   const uint sm = 0;
 
   delay(1000);
@@ -60,13 +41,7 @@ void loop1() {
     return;
   }
 
-  if (true) {
-    return;
-  }
-
   for (int a = 0; a < 5; a++) {
-    uint32_t addr = make_address(a);
-
     /*
     delay(1);
 
@@ -98,15 +73,12 @@ void loop1() {
     Serial.print("Reading... | ");
     Serial.print(a, HEX);
     Serial.print(" | ");
-    payload[0] = 0x02;
-    payload[1] = addr >> 8;
-    payload[2] = addr & 0xFF;
-    res_size = n64pio_transmit_receive(n64pio, payload, res, 3, BLOCK_SIZE+1);
+    res_size = n64pio_read_memory(n64pio, a, res);
     if (!res_size) {
       Serial.println(res_size);
       return;
     }
-    for (int i = 0; i < BLOCK_SIZE+1; i++) {
+    for (int i = 0; i < N64_BLOCK_SIZE+1; i++) {
       Serial.print(res[i], HEX);
       Serial.print(" ");
     }

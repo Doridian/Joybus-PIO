@@ -9,23 +9,16 @@
 
 uint n64pio_offsets[2] = {OFFSET_NOT_LOADED, OFFSET_NOT_LOADED};
 
-static int n64pio_add_program(N64PIOInstance instance) {
-  if (instance.offset == OFFSET_NOT_LOADED) {
-    instance.offset = n64pio_offsets[PIO_INDEX(instance)];
-    if (instance.offset == OFFSET_NOT_LOADED) {
-      instance.offset = pio_add_program(instance.pio, &n64pio_program);
-      n64pio_offsets[PIO_INDEX(instance)] = instance.offset;
-    }
-  }
-  return pio_add_program(instance.pio, &n64pio_program);
-}
-
-N64PIOInstance n64pio_program_init(PIO pio, uint sm, uint pin) {
+N64PIOInstance n64pio_program_init(PIO _pio, uint _sm, uint _pin) {
   N64PIOInstance instance;
-  instance.pio = pio;
-  instance.sm = sm;
-  instance.pin = pin;
-  instance.offset = OFFSET_NOT_LOADED;
+  instance.pio = _pio;
+  instance.sm = _sm;
+  instance.pin = _pin;
+  instance.offset = n64pio_offsets[PIO_INDEX(instance)];
+  if (instance.offset == OFFSET_NOT_LOADED) {
+    instance.offset = pio_add_program(instance.pio, &n64pio_program);
+    n64pio_offsets[PIO_INDEX(instance)] = instance.offset;
+  }
 
   pio_sm_set_enabled(instance.pio, instance.sm, false);
 
@@ -63,7 +56,7 @@ void n64pio_reset(N64PIOInstance instance) {
   pio_sm_set_enabled(instance.pio, instance.sm, true);
 }
 
-static void tx_data(N64PIOInstance instance, byte* payload, uint8_t payload_len, uint8_t response_len) {
+static void tx_data(N64PIOInstance instance, uint8_t* payload, uint8_t payload_len, uint8_t response_len) {
   while (pio_sm_is_tx_fifo_full(instance.pio, instance.sm)) {
     tight_loop_contents();
   }
@@ -76,21 +69,21 @@ static void tx_data(N64PIOInstance instance, byte* payload, uint8_t payload_len,
   instance.pio->txf[instance.sm] = data;
 }
 
-int n64pio_transmit_receive(N64PIOInstance instance, byte payload[], byte response[], uint payload_len, uint response_len) {
-  byte* payload_cur = payload;
+int n64pio_transmit_receive(N64PIOInstance instance, uint8_t payload[], uint8_t response[], int payload_len, int response_len) {
+  uint8_t* payload_cur = payload;
   while (payload_len > PAYLOAD_PACKET_MAX) {
     tx_data(instance, payload_cur, PAYLOAD_PACKET_MAX, 0);
     payload_cur += PAYLOAD_PACKET_MAX;
     payload_len -= PAYLOAD_PACKET_MAX;
   }
 
-  byte* response_cur = response;
+  uint8_t* response_cur = response;
   tx_data(instance, payload_cur, payload_len, response_len);
   while (response_len > 0) {
-    io_ro_32 *rxfifo_shift = (io_ro_32*)&instance.pio->rxf[0];
+    io_ro_32 *rxfifo_shift = (io_ro_32*)&instance.pio->rxf[instance.sm];
 
     unsigned long start = millis();
-    while (pio_sm_is_rx_fifo_empty(instance.pio, 0)) {
+    while (pio_sm_is_rx_fifo_empty(instance.pio, instance.sm)) {
       if ((millis() - start) > 10) {
         n64pio_reset(instance);
         return -1;
@@ -106,5 +99,5 @@ int n64pio_transmit_receive(N64PIOInstance instance, byte payload[], byte respon
     response_len -= 4;
   }
 
-  return (byte*)response_cur - response;
+  return response_cur - response;
 }

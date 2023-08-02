@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
+#include <stdint.h>
 
 #if !PICO_NO_HARDWARE
 #include "hardware/pio.h"
@@ -15,4 +15,5 @@ typedef struct N64PIOInstance {
 } N64PIOInstance;
 
 N64PIOInstance n64pio_program_init(PIO pio, uint sm, uint pin);
-int n64pio_transmit_receive(N64PIOInstance instance, byte payload[], byte response[], uint payload_len, uint response_len);
+int n64pio_transmit_receive(N64PIOInstance instance, uint8_t payload[], uint8_t response[], int payload_len, int response_len);
+void n64pio_reset(N64PIOInstance instance);
