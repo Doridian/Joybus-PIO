@@ -58,8 +58,7 @@ void loop1() {
       Serial.println(res_size);
       return;
     }*/
-    Serial.print("!");
-    Serial.println("| Done!");
+    Serial.println(" | Done!");
 
     delay(1);
 
