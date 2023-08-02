@@ -64,6 +64,7 @@ int joybus_n64_write_memory(JoybusPIOInstance instance, uint address, uint8_t da
 N64ControllerState joybus_n64_read_controller(JoybusPIOInstance instance) {
   N64ControllerState state;
   uint8_t payload[] = { 0x01 };
-  joybus_pio_transmit_receive(instance, payload, 1, state.raw, 4);
+  joybus_pio_transmit_receive(instance, payload, 1, (uint8_t*)&state, 4);
+  UINT16_FIX(state.buttons);
   return state;
 }

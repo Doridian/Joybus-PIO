@@ -16,31 +16,22 @@ void setup1() {
 }
 
 void loop1() {
-  uint8_t payload[64] = {};
-  uint8_t res[64] = {};
-  const uint sm = 0;
-
   delay(1000);
   Serial.print("Initializing...");
-  payload[0] = 0x00;
-  int res_size = joybus_pio_transmit_receive(joybus_pio, payload, 1, res, 3);
-  if (res_size <= 0) {
-    Serial.println(res_size);
-    return;
-  }
-  Serial.print("Receiving: ");
-  Serial.print(res[0], HEX);
-  Serial.print(" ");
-  Serial.print(res[1], HEX);
-  Serial.print(" ");
-  Serial.print(res[2], HEX);
-  Serial.print(" ");
+  JoybusControllerInfo info = joybus_init(joybus_pio, true);
+  Serial.print(" Type: ");
+  Serial.print(info.type, HEX);
+  Serial.print(" Aux: ");
+  Serial.print(info.aux, HEX);
   Serial.println(" Done!");
 
-  if (res[0] != 0x05) {
+  if (info.type != 0x0500) {
     return;
   }
 
+  uint8_t payload[64] = {};
+  uint8_t res[64] = {};
+  int res_size = 0;
   for (int a = 0; a < 5; a++) {
     delay(1);
 
