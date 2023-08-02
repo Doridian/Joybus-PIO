@@ -23,8 +23,9 @@ static void _tx_data(byte* payload, uint8_t payload_len, uint8_t response_len) {
     tight_loop_contents();
   }
 
-  uint8_t data[4] = { ~payload[2], ~payload[1], ~payload[0], (payload_len << 6) | response_len };
-  pio0->txf[0] = *(uint32_t*)data;
+  uint32_t data = (payload[2] << 0) | (payload[1] << 8) | (payload[0] << 16) | (payload_len << (6+24)) | response_len << 24;
+  data ^= 0x00FFFFFF; // Invert payload
+  pio0->txf[0] = data;
 }
 
 static int tx_data(byte payload[], byte response[], int payload_len, int response_len) {
@@ -48,14 +49,16 @@ static int tx_data(byte payload[], byte response[], int payload_len, int respons
       }
     }
 
-    Serial.println(*(uint32_t*)rxfifo_shift, HEX);
+    uint32_t rxfifo_data = *rxfifo_shift;
 
-    *response_cur = *rxfifo_shift;
-    response_cur += 4;
+    int i = (response_len > 3) ? 32 : (response_len << 3);
+    while ((i -= 8) >= 0) {
+      *(response_cur++) = (rxfifo_data >> i) & 0xFF;
+    }
     response_len -= 4;
   }
 
-  return response_cur - response;
+  return (byte*)response_cur - response;
 }
 
 uint8_t address_xor_table[] = {
@@ -84,7 +87,7 @@ void loop1() {
 
   delay(1000);
   Serial.print("Initializing...");
-  payload[0] = 0xFF;
+  payload[0] = 0x00;
   int res_size = tx_data(payload, res, 1, 3);
   if (res_size <= 0) {
     Serial.println(res_size);
@@ -103,39 +106,50 @@ void loop1() {
     return;
   }
 
+  if (true) {
+    return;
+  }
+
   for (int a = 0; a < 5; a++) {
     uint32_t addr = make_address(a);
 
-    /*delay(1);
+    /*
+    delay(1);
 
     Serial.print("Writing... | ");
     Serial.print(a, HEX);
     Serial.print(" | ");
-    tx_byte(0x03);
-    tx_byte(addr >> 8);
-    tx_byte(addr & 0xFF);
+    payload[0] = 0x03;
+    payload[1] = addr >> 8;
+    payload[2] = addr & 0xFF;
     for (int i = 0; i < BLOCK_SIZE+1; i++) {
-      tx_byte((i % 2 == 0) ? 0x55 : 0xAA);
+      
+      payload[i + 3] = (i % 2 == 0) ? 0x55 : 0xAA;
+      //payload[i + 3] = 0x00;
       Serial.print(".");
     }
-    tx_byte(95);
+    payload[BLOCK_SIZE+1+3] = 0x5F;
+    //payload[BLOCK_SIZE+1+3] = 0x00;
+    res_size = tx_data(payload, res, BLOCK_SIZE+1+3, 1);
+    if (!res_size) {
+      Serial.println(res_size);
+      return;
+    }
     Serial.print("!");
-    Serial.println("| Done!");*/
+    Serial.println("| Done!");
+    */
 
     delay(1);
 
-    /*
     Serial.print("Reading... | ");
     Serial.print(a, HEX);
     Serial.print(" | ");
-    tx_byte(0x02);
-    tx_byte(addr >> 8);
-    tx_byte(addr & 0xFF);
-    uint32_t intstatus = save_and_disable_interrupts();
-    tx_stopbit();
-    int res_size = rx_bytes(BLOCK_SIZE+1, res);
-    restore_interrupts(intstatus);
+    payload[0] = 0x02;
+    payload[1] = addr >> 8;
+    payload[2] = addr & 0xFF;
+    res_size = tx_data(payload, res, 3, BLOCK_SIZE+1);
     if (!res_size) {
+      Serial.println(res_size);
       return;
     }
     for (int i = 0; i < BLOCK_SIZE+1; i++) {
@@ -143,7 +157,6 @@ void loop1() {
       Serial.print(" ");
     }
     Serial.println("| Done!");
-    */
   }
 }
 

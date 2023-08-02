@@ -13,7 +13,7 @@
 // ------ //
 
 #define n64out_wrap_target 0
-#define n64out_wrap 24
+#define n64out_wrap 26
 
 static const uint16_t n64out_program_instructions[] = {
             //     .wrap_target
@@ -26,29 +26,31 @@ static const uint16_t n64out_program_instructions[] = {
     0x60c6, //  6: out    isr, 6                     
     0x4063, //  7: in     null, 3                    
     0xa046, //  8: mov    y, isr                     
-    0x002f, //  9: jmp    !x, 15                     
-    0x004b, // 10: jmp    x--, 11                    
-    0xef81, // 11: set    pindirs, 1             [15]
-    0x7f81, // 12: out    pindirs, 1             [31]
-    0xee80, // 13: set    pindirs, 0             [14]
-    0x004b, // 14: jmp    x--, 11                    
-    0x0060, // 15: jmp    !y, 0                      
-    0xef81, // 16: set    pindirs, 1             [15]
-    0xef80, // 17: set    pindirs, 0             [15]
-    0xa0c3, // 18: mov    isr, null                  
-    0x0094, // 19: jmp    y--, 20                    
-    0x3f20, // 20: wait   0 pin, 0               [31]
-    0x4001, // 21: in     pins, 1                    
-    0x20a0, // 22: wait   1 pin, 0                   
-    0x0094, // 23: jmp    y--, 20                    
-    0x8020, // 24: push   block                      
+    0x0030, //  9: jmp    !x, 16                     
+    0x004c, // 10: jmp    x--, 12                    
+    0xea80, // 11: set    pindirs, 0             [10]
+    0xef81, // 12: set    pindirs, 1             [15]
+    0x7f81, // 13: out    pindirs, 1             [31]
+    0xe380, // 14: set    pindirs, 0             [3] 
+    0x004b, // 15: jmp    x--, 11                    
+    0x0060, // 16: jmp    !y, 0                      
+    0xe980, // 17: set    pindirs, 0             [9] 
+    0xef81, // 18: set    pindirs, 1             [15]
+    0xef80, // 19: set    pindirs, 0             [15]
+    0xa0c3, // 20: mov    isr, null                  
+    0x0096, // 21: jmp    y--, 22                    
+    0x3f20, // 22: wait   0 pin, 0               [31]
+    0x4001, // 23: in     pins, 1                    
+    0x20a0, // 24: wait   1 pin, 0                   
+    0x0096, // 25: jmp    y--, 22                    
+    0x8020, // 26: push   block                      
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
 static const struct pio_program n64out_program = {
     .instructions = n64out_program_instructions,
-    .length = 25,
+    .length = 27,
     .origin = -1,
 };
 

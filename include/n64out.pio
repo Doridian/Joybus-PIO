@@ -17,16 +17,20 @@ mov y isr ; and load to Y
 
 jmp !x skip_write
 
-jmp x-- next_write ; plain decrement X
-next_write:
+jmp x-- first_write ; plain decrement X
+ ; MUST SUBTRACT 11 CYCLES
+ next_write:
+    set pindirs, 0 [10] ; waste 11 cycles
+first_write:
     set pindirs, 1 [15] ; assert low
     out pindirs, 1 [31] ; set to target bit
-    set pindirs, 0 [14] ; de-assert, only 14 delay because of jmp taking one cycle
+    set pindirs, 0 [3] ; de-assert, skip jump cycle and cycle waster above
     jmp x-- next_write
 
 skip_write:
 jmp !y wrap_target
 
+set pindirs, 0 [9]
 ; write stop-bit
 set pindirs, 1 [15]
 set pindirs, 0 [15]
