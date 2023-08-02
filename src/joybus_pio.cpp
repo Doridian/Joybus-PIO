@@ -58,7 +58,7 @@ void joybus_pio_reset(JoybusPIOInstance instance) {
 
 static void tx_data(JoybusPIOInstance instance, uint8_t* payload, uint8_t payload_len, uint8_t response_len) {
   while (pio_sm_is_tx_fifo_full(instance.pio, instance.sm)) {
-    delay(1);
+    tight_loop_contents();
   }
 
   uint32_t data = ((payload_len >= 3) ? (payload[2] << 0) : 0) |

@@ -45,40 +45,36 @@ void loop1() {
   Serial.print(state.joystick_y, DEC);
   Serial.println(" Done!");
 
-  if (true) {
-    return;
-  }
-
   uint8_t payload[64] = {};
   uint8_t res[64] = {};
-  int res_size = 0;
-  for (int a = 0; a < 5; a++) {
+  int last_result = 0;
+  for (int addr = 0; addr < 5; addr++) {
     delay(1);
 
     Serial.print("Writing... | ");
-    Serial.print(a, HEX);
+    Serial.print(addr, HEX);
     Serial.print(" | ");
     for (int i = 0; i < N64_BLOCK_SIZE; i++) {
       payload[i] = (i % 2 == 0) ? 0x55 : 0xAA;
       Serial.print(".");
     }
-    payload[0] = a & 0xFF;
-    payload[1] = (a >> 8) & 0xFF;
-    /*res_size = joybus_n64_write_memory(joybus_pio, a, payload);
-    if (!res_size) {
-      Serial.println(res_size);
+    payload[0] = addr & 0xFF;
+    payload[1] = (addr >> 8) & 0xFF;
+    last_result = joybus_n64_write_memory(joybus_pio, addr, payload);
+    if (last_result <= 0) {
+      Serial.println(last_result);
       return;
-    }*/
+    }
     Serial.println(" | Done!");
 
     delay(1);
 
     Serial.print("Reading... | ");
-    Serial.print(a, HEX);
+    Serial.print(addr, HEX);
     Serial.print(" | ");
-    res_size = joybus_n64_read_memory(joybus_pio, a, res);
-    if (!res_size) {
-      Serial.println(res_size);
+    last_result = joybus_n64_read_memory(joybus_pio, addr, res);
+    if (last_result <= 0) {
+      Serial.println(last_result);
       return;
     }
     for (int i = 0; i < N64_BLOCK_SIZE; i++) {
