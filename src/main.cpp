@@ -1,9 +1,9 @@
 #include <Arduino.h>
 
-#include "n64pio.hpp"
-#include "n64pio_utils.hpp"
+#include "joybus_pio.hpp"
+#include "joybus_n64_utils.hpp"
 
-N64PIOInstance n64pio;
+JoybusPIOInstance joybus_pio;
 void setup() {
 
 }
@@ -12,7 +12,7 @@ void setup1() {
   Serial.begin(115200);
   Serial.println("HI");
   
-  n64pio = n64pio_program_init(pio0, 0, 16);
+  joybus_pio = joybus_pio_program_init(pio0, 0, 16);
 }
 
 void loop1() {
@@ -23,7 +23,7 @@ void loop1() {
   delay(1000);
   Serial.print("Initializing...");
   payload[0] = 0x00;
-  int res_size = n64pio_transmit_receive(n64pio, payload, res, 1, 3);
+  int res_size = joybus_pio_transmit_receive(joybus_pio, payload, res, 1, 3);
   if (res_size <= 0) {
     Serial.println(res_size);
     return;
@@ -53,7 +53,7 @@ void loop1() {
     }
     payload[0] = a & 0xFF;
     payload[1] = (a >> 8) & 0xFF;
-    /*res_size = n64pio_write_memory(n64pio, a, payload);
+    /*res_size = joybus_n64_write_memory(joybus_pio, a, payload);
     if (!res_size) {
       Serial.println(res_size);
       return;
@@ -65,7 +65,7 @@ void loop1() {
     Serial.print("Reading... | ");
     Serial.print(a, HEX);
     Serial.print(" | ");
-    res_size = n64pio_read_memory(n64pio, a, res);
+    res_size = joybus_n64_read_memory(joybus_pio, a, res);
     if (!res_size) {
       Serial.println(res_size);
       return;

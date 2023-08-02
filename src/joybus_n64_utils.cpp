@@ -1,5 +1,5 @@
-#include <n64pio_utils.hpp>
-#include <n64pio.hpp>
+#include "joybus_n64_utils.hpp"
+#include "joybus_pio.hpp"
 #include <string.h>
 
 static uint8_t address_xor_table[] = {
@@ -36,10 +36,10 @@ static uint8_t make_data_checksum(uint8_t data[]) {
   return crc & 0xFF;
 }
 
-int n64pio_read_memory(N64PIOInstance instance, uint address, uint8_t response[]) {
+int joybus_n64_read_memory(JoybusPIOInstance instance, uint address, uint8_t response[]) {
   uint32_t address_checksummed = make_address_checksummed(address);
   uint8_t payload[3] = { 0x02, (uint8_t)(address_checksummed >> 8), (uint8_t)(address_checksummed & 0xFF) };
-  int len = n64pio_transmit_receive(instance, payload, response, 3, N64_BLOCK_SIZE+1);
+  int len = joybus_pio_transmit_receive(instance, payload, response, 3, N64_BLOCK_SIZE+1);
   if (len != N64_BLOCK_SIZE+1) {
     if (len < 0) {
       return len;
@@ -52,11 +52,11 @@ int n64pio_read_memory(N64PIOInstance instance, uint address, uint8_t response[]
   return N64_BLOCK_SIZE;
 }
 
-int n64pio_write_memory(N64PIOInstance instance, uint address, uint8_t data[]) {
+int joybus_n64_write_memory(JoybusPIOInstance instance, uint address, uint8_t data[]) {
   uint32_t address_checksummed = make_address_checksummed(address);
   uint8_t payload[(N64_BLOCK_SIZE+1)+3] = { 0x03, (uint8_t)(address_checksummed >> 8), (uint8_t)(address_checksummed & 0xFF) };
   memcpy(payload + 3, data, N64_BLOCK_SIZE);
   payload[(N64_BLOCK_SIZE+1)+2] = make_data_checksum(data);
   uint8_t response;
-  return n64pio_transmit_receive(instance, payload, &response, (N64_BLOCK_SIZE+1)+3, 1);
+  return joybus_pio_transmit_receive(instance, payload, &response, (N64_BLOCK_SIZE+1)+3, 1);
 }

@@ -8,14 +8,14 @@
 #include "hardware/pio.h"
 #endif
 
-// ------ //
-// n64pio //
-// ------ //
+// ---------- //
+// joybus_pio //
+// ---------- //
 
-#define n64pio_wrap_target 0
-#define n64pio_wrap 26
+#define joybus_pio_wrap_target 0
+#define joybus_pio_wrap 26
 
-static const uint16_t n64pio_program_instructions[] = {
+static const uint16_t joybus_pio_program_instructions[] = {
             //     .wrap_target
     0x80a0, //  0: pull   block                      
     0xa0c3, //  1: mov    isr, null                  
@@ -48,15 +48,15 @@ static const uint16_t n64pio_program_instructions[] = {
 };
 
 #if !PICO_NO_HARDWARE
-static const struct pio_program n64pio_program = {
-    .instructions = n64pio_program_instructions,
+static const struct pio_program joybus_pio_program = {
+    .instructions = joybus_pio_program_instructions,
     .length = 27,
     .origin = -1,
 };
 
-static inline pio_sm_config n64pio_program_get_default_config(uint offset) {
+static inline pio_sm_config joybus_pio_program_get_default_config(uint offset) {
     pio_sm_config c = pio_get_default_sm_config();
-    sm_config_set_wrap(&c, offset + n64pio_wrap_target, offset + n64pio_wrap);
+    sm_config_set_wrap(&c, offset + joybus_pio_wrap_target, offset + joybus_pio_wrap);
     return c;
 }
 #endif

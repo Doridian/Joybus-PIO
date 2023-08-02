@@ -1,23 +1,23 @@
 #include <Arduino.h>
 
-#include "n64pio.hpp"
-#include "n64pio_private.h"
+#include "joybus_pio.hpp"
+#include "joybus_pio_private.h"
 
 #define PAYLOAD_PACKET_MAX 3
 #define OFFSET_NOT_LOADED 0xFFFFFFFF
 #define PIO_INDEX(instance) ((instance.pio == pio0) ? 0 : 1)
 
-uint n64pio_offsets[2] = {OFFSET_NOT_LOADED, OFFSET_NOT_LOADED};
+uint joybus_pio_offsets[2] = {OFFSET_NOT_LOADED, OFFSET_NOT_LOADED};
 
-N64PIOInstance n64pio_program_init(PIO _pio, uint _sm, uint _pin) {
-  N64PIOInstance instance;
+JoybusPIOInstance joybus_pio_program_init(PIO _pio, uint _sm, uint _pin) {
+  JoybusPIOInstance instance;
   instance.pio = _pio;
   instance.sm = _sm;
   instance.pin = _pin;
-  instance.offset = n64pio_offsets[PIO_INDEX(instance)];
+  instance.offset = joybus_pio_offsets[PIO_INDEX(instance)];
   if (instance.offset == OFFSET_NOT_LOADED) {
-    instance.offset = pio_add_program(instance.pio, &n64pio_program);
-    n64pio_offsets[PIO_INDEX(instance)] = instance.offset;
+    instance.offset = pio_add_program(instance.pio, &joybus_pio_program);
+    joybus_pio_offsets[PIO_INDEX(instance)] = instance.offset;
   }
 
   pio_sm_set_enabled(instance.pio, instance.sm, false);
@@ -27,7 +27,7 @@ N64PIOInstance n64pio_program_init(PIO _pio, uint _sm, uint _pin) {
   gpio_set_oeover(instance.pin, GPIO_OVERRIDE_HIGH);
   gpio_set_outover(instance.pin, GPIO_OVERRIDE_LOW);
 
-  instance.config = n64pio_program_get_default_config(instance.offset);
+  instance.config = joybus_pio_program_get_default_config(instance.offset);
   sm_config_set_in_pins(&instance.config, instance.pin);
   sm_config_set_out_pins(&instance.config, instance.pin, 1);
   sm_config_set_set_pins(&instance.config, instance.pin, 1);
@@ -49,14 +49,14 @@ N64PIOInstance n64pio_program_init(PIO _pio, uint _sm, uint _pin) {
   return instance;
 }
 
-void n64pio_reset(N64PIOInstance instance) {
+void joybus_pio_reset(JoybusPIOInstance instance) {
   pio_sm_set_enabled(instance.pio, instance.sm, false);
   pio_sm_init(instance.pio, instance.sm, instance.offset, &instance.config);
   pio_sm_set_consecutive_pindirs(instance.pio, instance.sm, instance.pin, 1, false);
   pio_sm_set_enabled(instance.pio, instance.sm, true);
 }
 
-static void tx_data(N64PIOInstance instance, uint8_t* payload, uint8_t payload_len, uint8_t response_len) {
+static void tx_data(JoybusPIOInstance instance, uint8_t* payload, uint8_t payload_len, uint8_t response_len) {
   while (pio_sm_is_tx_fifo_full(instance.pio, instance.sm)) {
     tight_loop_contents();
   }
@@ -69,7 +69,7 @@ static void tx_data(N64PIOInstance instance, uint8_t* payload, uint8_t payload_l
   instance.pio->txf[instance.sm] = data;
 }
 
-int n64pio_transmit_receive(N64PIOInstance instance, uint8_t payload[], uint8_t response[], int payload_len, int response_len) {
+int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[], uint8_t response[], int payload_len, int response_len) {
   uint8_t* payload_cur = payload;
   while (payload_len > PAYLOAD_PACKET_MAX) {
     tx_data(instance, payload_cur, PAYLOAD_PACKET_MAX, 0);
@@ -85,7 +85,7 @@ int n64pio_transmit_receive(N64PIOInstance instance, uint8_t payload[], uint8_t 
     unsigned long start = millis();
     while (pio_sm_is_rx_fifo_empty(instance.pio, instance.sm)) {
       if ((millis() - start) > 10) {
-        n64pio_reset(instance);
+        joybus_pio_reset(instance);
         return -1;
       }
     }
