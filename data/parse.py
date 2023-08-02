@@ -32,6 +32,8 @@ def n64_add_checksum(real_data):
     calc_checksum = crc_poly(real_data, 8, 0x85, 0x00)
     return real_data + [calc_checksum]
 
+print(n64_add_checksum([0x00, 0x00] + [0x55, 0xAA]*15))
+
 data = {}
 max_addr = 0
 with open("mpakdata.txt", "r") as f:
@@ -60,5 +62,3 @@ with open("mpakdata.raw", "wb") as f:
         if i not in data:
             raise ValueError(f"Missing {i}")
         f.write(data[i])
-
-print(n64_add_checksum([0x55, 0xAA]*16))

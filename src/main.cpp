@@ -19,7 +19,7 @@ bool inited = false;
 
 void loop1() {
   if (!inited) {
-    delay(1000);
+    delay(5000);
     Serial.print("Initializing...");
     JoybusControllerInfo info = joybus_init(joybus_pio, true);
     Serial.print(" Type: ");

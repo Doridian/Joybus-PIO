@@ -93,7 +93,7 @@ int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[], i
     rxfifo_data = *rxfifo_shift;
 
     int i = 32;
-    while (response_len-- > 0 && (i -= 8) >= 0) {
+    while ((i -= 8) >= 0 && response_len-- > 0) {
       *(response_cur++) = (rxfifo_data >> i) & 0xFF;
     }
   }
