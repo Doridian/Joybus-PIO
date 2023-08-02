@@ -1,5 +1,6 @@
 .program n64out
 
+
 .wrap_target
 wrap_target:
 
@@ -53,6 +54,8 @@ static inline void n64out_program_init(PIO pio, uint sm, uint offset, uint pin) 
     sm_config_set_clkdiv(&c, frac);
 
     pio_gpio_init(pio, pin);
+    pio_sm_clear_fifos(pio, sm);
+    pio_sm_set_pins(pio, sm, 0);
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
 
     // Load our configuration, and jump to the start of the program

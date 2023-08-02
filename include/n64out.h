@@ -66,6 +66,8 @@ static inline void n64out_program_init(PIO pio, uint sm, uint offset, uint pin) 
     float frac = (clock_get_hz(clk_sys) / 1000000) / 16;
     sm_config_set_clkdiv(&c, frac);
     pio_gpio_init(pio, pin);
+    pio_sm_clear_fifos(pio, sm);
+    pio_sm_set_pins(pio, sm, 0);
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
     // Load our configuration, and jump to the start of the program
     pio_sm_init(pio, sm, offset, &c);
