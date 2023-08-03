@@ -75,11 +75,10 @@ void joybus_pio_reset(JoybusPIOInstance instance) {
 
 static void tx_data(JoybusPIOInstance instance, uint8_t *payload,
                     uint8_t payload_len, uint8_t response_len) {
+  uint8_t data[4] = { payload[2], payload[1], payload[0], (uint8_t)((payload_len << 6) | response_len) };
   while (pio_sm_is_tx_fifo_full(instance.pio, instance.sm)) {
     tight_loop_contents();
   }
-
-  uint8_t data[4] = { payload[2], payload[1], payload[0], (uint8_t)((payload_len << 6) | response_len) };
   instance.pio->txf[instance.sm] = (uint32_t)((*(uint32_t*)data) ^ 0x00FFFFFF);
 }
 
