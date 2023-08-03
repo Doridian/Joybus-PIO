@@ -88,11 +88,11 @@ void loop1() {
     Serial.print(state.joystick_x, DEC);
     Serial.print(" Joystick Y: ");
     Serial.print(state.joystick_y, DEC);
-    Serial.print(" C X: ");
+    Serial.print(" CStick X: ");
     Serial.print(state.cstick_x, DEC);
-    Serial.print(" C Y: ");
+    Serial.print(" CStick Y: ");
     Serial.print(state.cstick_y, DEC);
-    Serial.print("L: ");
+    Serial.print(" L: ");
     Serial.print(state.analog_l, DEC);
     Serial.print(" R: ");
     Serial.print(state.analog_r, DEC);
