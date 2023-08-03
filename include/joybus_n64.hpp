@@ -35,7 +35,7 @@ typedef struct __attribute__((__packed__)) N64ControllerState {
   bool valid;
 } N64ControllerState;
 
-// response[] is expected to be N64_BLOCK_SIZE + 1 bytes long (for the checksum)
+// response[] is expected to be N64_BLOCK_SIZE bytes long
 int joybus_n64_read_memory(JoybusPIOInstance instance, uint address,
                            uint8_t response[]);
 

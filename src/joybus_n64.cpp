@@ -40,19 +40,20 @@ int joybus_n64_read_memory(JoybusPIOInstance instance, uint address,
   uint32_t address_checksummed = make_address_checksummed(address);
   uint8_t payload[3] = {0x02, (uint8_t)(address_checksummed >> 8),
                         (uint8_t)(address_checksummed & 0xFF)};
-  int result = joybus_pio_transmit_receive(instance, payload, 3, response,
+  uint8_t raw_response[N64_BLOCK_SIZE + 1];
+  int result = joybus_pio_transmit_receive(instance, payload, 3, raw_response,
                                            N64_BLOCK_SIZE + 1);
   if (result != N64_BLOCK_SIZE + 1) {
     if (result < 0) {
       return result;
     }
-    Serial.println(result, HEX);
     return -20;
   }
   if (make_data_checksum(response, N64_BLOCK_SIZE) !=
       response[N64_BLOCK_SIZE]) {
     return -30;
   }
+  memcpy(response, raw_response, N64_BLOCK_SIZE);
   return N64_BLOCK_SIZE;
 }
 
