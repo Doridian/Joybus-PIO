@@ -2,6 +2,7 @@
 
 #include "joybus_pio.hpp"
 #include "joybus_n64.hpp"
+#include "joybus_gamecube.hpp"
 
 JoybusPIOInstance joybus_pio;
 void setup() {
@@ -16,34 +17,94 @@ void setup1() {
 }
 
 bool inited = false;
+bool initedType = false;
+JoybusControllerInfo info;
 
 void loop1() {
   if (!inited) {
     delay(5000);
     Serial.print("Initializing...");
-    JoybusControllerInfo info = joybus_init(joybus_pio, true);
+    info = joybus_init(joybus_pio, true);
     Serial.print(" Type: ");
     Serial.print(info.type, HEX);
     Serial.print(" Aux: ");
     Serial.print(info.aux, HEX);
     Serial.println(" Done!");
 
-    if (info.type != 0x0500) {
-      return;
-    }
     inited = true;
   }
 
   delay(100);
-  Serial.print("Querying... ");
-  N64ControllerState state = joybus_n64_read_controller(joybus_pio);
-  Serial.print("Buttons: ");
-  Serial.print(state.buttons, BIN);
-  Serial.print(" Joystick X: ");
-  Serial.print(state.joystick_x, DEC);
-  Serial.print(" Joystick Y: ");
-  Serial.print(state.joystick_y, DEC);
-  Serial.println(" Done!");
+
+  switch (info.type) {
+    case 0x0500: { // N64
+      Serial.print("Querying N64... ");
+      N64ControllerState state = joybus_n64_read_controller(joybus_pio);
+      Serial.print("Buttons: ");
+      Serial.print(state.buttons, BIN);
+      Serial.print(" Joystick X: ");
+      Serial.print(state.joystick_x, DEC);
+      Serial.print(" Joystick Y: ");
+      Serial.print(state.joystick_y, DEC);
+      Serial.println(" Done!");
+      break;
+    }
+    case 0x0900: { // GameCube
+      GCControllerState state;
+      if (!initedType) {
+        Serial.print("Recalibrating GC... ");
+        state = joybus_gc_recalibrate(joybus_pio);
+        Serial.print(initedType);
+        Serial.print(" Buttons: ");
+        Serial.print(state.buttons, BIN);
+        Serial.print(" Joystick X: ");
+        Serial.print(state.joystick_x, DEC);
+        Serial.print(" Joystick Y: ");
+        Serial.print(state.joystick_y, DEC);
+        Serial.println(" Done!");
+      } else {
+        Serial.print("Probing GC origin... ");
+        state = joybus_gc_probe_origin(joybus_pio);
+        Serial.print(initedType);
+        Serial.print(" Buttons: ");
+        Serial.print(state.buttons, BIN);
+        Serial.print(" Joystick X: ");
+        Serial.print(state.joystick_x, DEC);
+        Serial.print(" Joystick Y: ");
+        Serial.print(state.joystick_y, DEC);
+        Serial.println(" Done!");
+      }
+      Serial.print("Querying GC Position... ");
+      state = joybus_gc_short_poll(joybus_pio, 0);
+      Serial.print("Buttons: ");
+      Serial.print(state.buttons, BIN);
+      Serial.print(" Joystick X: ");
+      Serial.print(state.joystick_x, DEC);
+      Serial.print(" Joystick Y: ");
+      Serial.print(state.joystick_y, DEC);
+      Serial.print(" C X: ");
+      Serial.print(state.cstick_x, DEC);
+      Serial.print(" C Y: ");
+      Serial.print(state.cstick_y, DEC);
+      Serial.print("L: ");
+      Serial.print(state.analog_l, DEC);
+      Serial.print(" R: ");
+      Serial.print(state.analog_r, DEC);
+      Serial.println(" Done!");
+      break;
+    }
+    default: {
+      inited = false;
+      initedType = false;
+      return;
+    }
+  }
+  
+  initedType = true;
+
+  if (true) {
+    return;
+  }
 
   uint8_t payload[64] = {};
   uint8_t res[64] = {};

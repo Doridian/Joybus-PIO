@@ -77,8 +77,6 @@ N64ControllerState joybus_n64_read_controller(JoybusPIOInstance instance) {
   uint8_t payload[] = { 0x01 };
   if (joybus_pio_transmit_receive(instance, payload, 1, (uint8_t*)&state, 4) != 4) {
     state.buttons = 0xFFFF;
-    state.joystick_x = 0;
-    state.joystick_y = 0;
   }
   state.buttons = UINT16_FIX_ENDIAN(state.buttons);
   return state;
