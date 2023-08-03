@@ -14,6 +14,10 @@ typedef struct __attribute__((__packed__))  N64ControllerState {
     int8_t joystick_y;
 } N64ControllerState;
 
+// response[] is expected to be N64_BLOCK_SIZE + 1 bytes long (for the checksum)
 int joybus_n64_read_memory(JoybusPIOInstance instance, uint address, uint8_t response[]);
+
+// data[] is expected to be N64_BLOCK_SIZE bytes long
 int joybus_n64_write_memory(JoybusPIOInstance instance, uint address, uint8_t data[]);
+
 N64ControllerState joybus_n64_read_controller(JoybusPIOInstance instance);
