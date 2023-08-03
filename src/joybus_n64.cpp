@@ -1,8 +1,8 @@
-#include "joybus_n64.hpp"
-#include "joybus_pio.hpp"
 #include <Arduino.h>
 #include <string.h>
 
+#include "joybus_n64.hpp"
+#include "joybus_pio.hpp"
 
 static uint8_t address_xor_table[] = {0x01, 0x1A, 0x0D, 0x1C, 0x0E, 0x07,
                                       0x19, 0x16, 0x0B, 0x1F, 0x15};

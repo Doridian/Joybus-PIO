@@ -4,7 +4,6 @@
 #include "joybus_n64.hpp"
 #include "joybus_pio.hpp"
 
-
 JoybusPIOInstance joybus_pio;
 void setup() {}
 
