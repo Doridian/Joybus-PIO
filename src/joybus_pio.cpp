@@ -92,15 +92,15 @@ int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[],
     payload_len -= PAYLOAD_PACKET_MAX;
   }
 
+  uint8_t payload_remaining[PAYLOAD_PACKET_MAX] = {0};
+  memcpy(payload_remaining, payload_cur, payload_len);
+  tx_data(instance, payload_remaining, payload_len, response_len);
+
   int rxfifo_res;
   uint8_t *response_cur = response;
   unsigned long start;
   uint32_t rxfifo_data;
   io_ro_32 *rxfifo_shift;
-
-  uint8_t payload_remaining[PAYLOAD_PACKET_MAX] = {0};
-  memcpy(payload_remaining, payload_cur, payload_len);
-  tx_data(instance, payload_remaining, payload_len, response_len);
   while (response_len > 0) {
     rxfifo_shift = (io_ro_32 *)&instance.pio->rxf[instance.sm];
     start = millis();
