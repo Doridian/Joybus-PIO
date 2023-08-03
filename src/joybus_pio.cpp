@@ -39,7 +39,8 @@ JoybusPIOInstance joybus_pio_program_init(PIO _pio, uint _sm, uint _pin) {
   sm_config_set_clkdiv(&instance.config, frac);
 
   pio_gpio_init(instance.pio, instance.pin);
-  pio_sm_set_consecutive_pindirs(instance.pio, instance.sm, instance.pin, 1, false);
+  pio_sm_set_consecutive_pindirs(instance.pio, instance.sm, instance.pin, 1,
+                                 false);
 
   // Load our configuration, and jump to the start of the program
   pio_sm_init(instance.pio, instance.sm, instance.offset, &instance.config);
@@ -52,11 +53,13 @@ JoybusPIOInstance joybus_pio_program_init(PIO _pio, uint _sm, uint _pin) {
 void joybus_pio_reset(JoybusPIOInstance instance) {
   pio_sm_set_enabled(instance.pio, instance.sm, false);
   pio_sm_init(instance.pio, instance.sm, instance.offset, &instance.config);
-  pio_sm_set_consecutive_pindirs(instance.pio, instance.sm, instance.pin, 1, false);
+  pio_sm_set_consecutive_pindirs(instance.pio, instance.sm, instance.pin, 1,
+                                 false);
   pio_sm_set_enabled(instance.pio, instance.sm, true);
 }
 
-static void tx_data(JoybusPIOInstance instance, uint8_t* payload, uint8_t payload_len, uint8_t response_len) {
+static void tx_data(JoybusPIOInstance instance, uint8_t *payload,
+                    uint8_t payload_len, uint8_t response_len) {
   while (pio_sm_is_tx_fifo_full(instance.pio, instance.sm)) {
     tight_loop_contents();
   }
@@ -64,13 +67,15 @@ static void tx_data(JoybusPIOInstance instance, uint8_t* payload, uint8_t payloa
   uint32_t data = ((payload_len >= 3) ? (payload[2] << 0) : 0) |
                   ((payload_len >= 2) ? (payload[1] << 8) : 0) |
                   ((payload_len >= 1) ? (payload[0] << 16) : 0) |
-                  (payload_len << (6+24)) | response_len << 24;
+                  (payload_len << (6 + 24)) | response_len << 24;
   data ^= 0x00FFFFFF; // Invert payload
   instance.pio->txf[instance.sm] = data;
 }
 
-int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[], int payload_len, uint8_t response[], int response_len) {
-  uint8_t* payload_cur = payload;
+int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[],
+                                int payload_len, uint8_t response[],
+                                int response_len) {
+  uint8_t *payload_cur = payload;
   while (payload_len > PAYLOAD_PACKET_MAX) {
     tx_data(instance, payload_cur, PAYLOAD_PACKET_MAX, 0);
     payload_cur += PAYLOAD_PACKET_MAX;
@@ -78,11 +83,13 @@ int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[], i
   }
 
   int rxfifo_res;
-  uint8_t* response_cur = response;
-  unsigned long start; uint32_t rxfifo_data; io_ro_32* rxfifo_shift;
+  uint8_t *response_cur = response;
+  unsigned long start;
+  uint32_t rxfifo_data;
+  io_ro_32 *rxfifo_shift;
   tx_data(instance, payload_cur, payload_len, response_len);
   while (response_len > 0) {
-    rxfifo_shift = (io_ro_32*)&instance.pio->rxf[instance.sm];
+    rxfifo_shift = (io_ro_32 *)&instance.pio->rxf[instance.sm];
     start = millis();
     while (pio_sm_is_rx_fifo_empty(instance.pio, instance.sm)) {
       if ((millis() - start) > 10) {
@@ -104,8 +111,8 @@ int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[], i
 JoybusControllerInfo joybus_init(JoybusPIOInstance instance, bool reset) {
   JoybusControllerInfo info;
   info.type = 0x0000;
-  uint8_t payload[] = { reset ? (uint8_t)0xFF : (uint8_t)0x00 };
-  joybus_pio_transmit_receive(instance, payload, 1, (uint8_t*)&info, 3);
+  uint8_t payload[] = {reset ? (uint8_t)0xFF : (uint8_t)0x00};
+  joybus_pio_transmit_receive(instance, payload, 1, (uint8_t *)&info, 3);
   info.type = UINT16_FIX_ENDIAN(info.type);
   return info;
 }

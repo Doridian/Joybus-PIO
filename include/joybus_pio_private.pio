@@ -20,12 +20,12 @@ jmp !x skip_write
 jmp x-- first_write ; plain decrement X, jump always taken
  ; MUST SUBTRACT 11 CYCLES
  next_write:
-    set pindirs, 0 [10] ; waste 11 cycles
+  set pindirs, 0 [10] ; waste 11 cycles
 first_write:
-    set pindirs, 1 [15] ; assert low
-    out pindirs, 1 [31] ; set to target bit
-    set pindirs, 0 [3] ; de-assert, skip jump cycle and cycle waster above
-    jmp x-- next_write
+  set pindirs, 1 [15] ; assert low
+  out pindirs, 1 [31] ; set to target bit
+  set pindirs, 0 [3] ; de-assert, skip jump cycle and cycle waster above
+  jmp x-- next_write
 
 skip_write:
 jmp !y wrap_target
@@ -39,10 +39,10 @@ set pindirs, 0 [15]
 mov isr null
 jmp y-- next_read ; plain decrement Y, jump always taken
 next_read:
-    wait 0 pin 0 [31] ; wait for gamepad LOW assertion
-    in pins 1
-    wait 1 pin 0 ; wait for gamepad HIGH/release
-    jmp y-- next_read
+  wait 0 pin 0 [31] ; wait for gamepad LOW assertion
+  in pins 1
+  wait 1 pin 0 ; wait for gamepad HIGH/release
+  jmp y-- next_read
 in null 8 ; we need 3 instructions here
 in null 8 ; due to the push direction of the register
 in null 8 ; otherwise we get really messed up alignment
