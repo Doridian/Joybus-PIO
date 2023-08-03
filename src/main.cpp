@@ -40,6 +40,10 @@ void loop1() {
     case 0x0500: { // N64
       Serial.print("Querying N64... ");
       N64ControllerState state = joybus_n64_read_controller(joybus_pio);
+      if (!state.valid) {
+        Serial.println("ERROR");
+        return;
+      }
       Serial.print("Buttons: ");
       Serial.print(state.buttons, BIN);
       Serial.print(" Joystick X: ");
@@ -50,32 +54,35 @@ void loop1() {
       break;
     }
     case 0x0900: { // GameCube
-      GCControllerState state;
+      GCControllerState origin;
       if (!initedType) {
         Serial.print("Recalibrating GC... ");
-        state = joybus_gc_recalibrate(joybus_pio);
-        Serial.print(initedType);
-        Serial.print(" Buttons: ");
-        Serial.print(state.buttons, BIN);
-        Serial.print(" Joystick X: ");
-        Serial.print(state.joystick_x, DEC);
-        Serial.print(" Joystick Y: ");
-        Serial.print(state.joystick_y, DEC);
-        Serial.println(" Done!");
+        origin = joybus_gc_recalibrate(joybus_pio);
       } else {
         Serial.print("Probing GC origin... ");
-        state = joybus_gc_probe_origin(joybus_pio);
-        Serial.print(initedType);
-        Serial.print(" Buttons: ");
-        Serial.print(state.buttons, BIN);
-        Serial.print(" Joystick X: ");
-        Serial.print(state.joystick_x, DEC);
-        Serial.print(" Joystick Y: ");
-        Serial.print(state.joystick_y, DEC);
-        Serial.println(" Done!");
+        origin = joybus_gc_probe_origin(joybus_pio);
       }
+      if (!origin.valid) {
+        Serial.println("ERROR");
+        return;
+      }
+      Serial.print(" Joystick X: ");
+      Serial.print(origin.joystick_x, DEC);
+      Serial.print(" Joystick Y: ");
+      Serial.print(origin.joystick_y, DEC);
+      Serial.print(" C X: ");
+      Serial.print(origin.cstick_x, DEC);
+      Serial.print(" C Y: ");
+      Serial.print(origin.cstick_y, DEC);
+      Serial.println(" Done!");
+
       Serial.print("Querying GC Position... ");
-      state = joybus_gc_short_poll(joybus_pio, 0);
+      GCControllerState raw_state = joybus_gc_short_poll(joybus_pio, 0);
+      if (!raw_state.valid) {
+        Serial.println("ERROR");
+        return;
+      }
+      NormalizedGCControllerState state = gc_normalize(raw_state, origin);
       Serial.print("Buttons: ");
       Serial.print(state.buttons, BIN);
       Serial.print(" Joystick X: ");

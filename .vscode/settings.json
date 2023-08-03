@@ -4,6 +4,7 @@
         "n64pio_private.h": "c",
         "arduino.h": "c",
         "random": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "typeinfo": "cpp"
     }
 }
