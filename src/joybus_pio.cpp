@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "joybus_pio.hpp"
-#include "joybus_pio_private.h"
+#include "joybus_private.pio.h"
 
 #define PAYLOAD_PACKET_MAX 3
 #define OFFSET_NOT_LOADED 0xFFFFFFFF
@@ -106,13 +106,4 @@ int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[],
   }
 
   return response_cur - response;
-}
-
-JoybusControllerInfo joybus_init(JoybusPIOInstance instance, bool reset) {
-  JoybusControllerInfo info;
-  info.type = 0x0000;
-  uint8_t payload[] = {reset ? (uint8_t)0xFF : (uint8_t)0x00};
-  joybus_pio_transmit_receive(instance, payload, 1, (uint8_t *)&info, 3);
-  info.type = UINT16_FIX_ENDIAN(info.type);
-  return info;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "joybus_pio.hpp"
 
@@ -31,7 +32,7 @@ typedef struct __attribute__((__packed__)) N64ControllerState {
   uint16_t buttons;
   int8_t joystick_x;
   int8_t joystick_y;
-  uint8_t valid;
+  bool valid;
 } N64ControllerState;
 
 // response[] is expected to be N64_BLOCK_SIZE + 1 bytes long (for the checksum)

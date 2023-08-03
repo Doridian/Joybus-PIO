@@ -1,8 +1,9 @@
 #include <Arduino.h>
 
+#include "joybus_pio.hpp"
+#include "joybus_generic.hpp"
 #include "joybus_gamecube.hpp"
 #include "joybus_n64.hpp"
-#include "joybus_pio.hpp"
 
 JoybusPIOInstance joybus_pio;
 void setup() {}
@@ -22,7 +23,7 @@ void loop1() {
   if (!inited) {
     delay(5000);
     Serial.print("Initializing...");
-    info = joybus_init(joybus_pio, true);
+    info = joybus_handshake(joybus_pio, true);
     Serial.print(" Type: ");
     Serial.print(info.type, HEX);
     Serial.print(" Aux: ");

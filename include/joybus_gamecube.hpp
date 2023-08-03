@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "joybus_pio.hpp"
 
@@ -32,7 +33,7 @@ typedef struct __attribute__((packed)) GCControllerState {
   uint8_t analog_l;
   uint8_t analog_r;
   uint8_t reserved[2];
-  uint8_t valid;
+  bool valid;
 } GCControllerState;
 
 typedef struct NormalizedGCControllerState {
@@ -43,6 +44,7 @@ typedef struct NormalizedGCControllerState {
   int cstick_y;
   int analog_l;
   int analog_r;
+  bool valid;
 } NormalizedGCControllerState;
 
 #define GC_POLL_FLAG_RUMBLE 0b00000001

@@ -39,6 +39,7 @@ NormalizedGCControllerState gc_normalize(GCControllerState state,
                                          GCControllerState origin) {
   NormalizedGCControllerState output;
   output.buttons = state.buttons;
+  output.valid = state.valid && origin.valid;
   GC_NORMALIZE_ELEMENT(joystick_x);
   GC_NORMALIZE_ELEMENT(joystick_y);
   GC_NORMALIZE_ELEMENT(cstick_x);
