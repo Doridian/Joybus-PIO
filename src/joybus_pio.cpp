@@ -79,12 +79,8 @@ static void tx_data(JoybusPIOInstance instance, uint8_t *payload,
     tight_loop_contents();
   }
 
-  uint32_t data = ((payload_len >= 3) ? (payload[2] << 0) : 0) |
-                  ((payload_len >= 2) ? (payload[1] << 8) : 0) |
-                  ((payload_len >= 1) ? (payload[0] << 16) : 0) |
-                  (payload_len << (6 + 24)) | response_len << 24;
-  data ^= 0x00FFFFFF; // Invert payload
-  instance.pio->txf[instance.sm] = data;
+  uint8_t data[4] = { payload[2], payload[1], payload[0], (uint8_t)((payload_len << 6) | response_len) };
+  instance.pio->txf[instance.sm] = (uint32_t)((*(uint32_t*)data) ^ 0x00FFFFFF);
 }
 
 int joybus_pio_transmit_receive(JoybusPIOInstance instance, uint8_t payload[],
