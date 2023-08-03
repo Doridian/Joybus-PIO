@@ -58,7 +58,7 @@ void joybus_pio_reset(JoybusPIOInstance instance) {
   pio_sm_set_enabled(instance.pio, instance.sm, true);
 }
 
-// The packet format is as follows:
+// The request packet format is as follows:
 //
 // 0x00: 0bPPRRRRRR (P = payload len bytes (2 bits unsigned), R = response len bytes (6 bits unsigned))
 // 0x01: Payload byte 1 (or 0x00)
@@ -70,6 +70,8 @@ void joybus_pio_reset(JoybusPIOInstance instance) {
 //
 // Responses are hard limited to 63 bytes (which is an acceptable trade-off as the biggest packet
 // ever observed as part of Joybus sent by either side is < 40 bytes)
+//
+// The response packet format is the response bytes in groups of 4 bytes, padded by zeros in the last transmission
 
 static void tx_data(JoybusPIOInstance instance, uint8_t *payload,
                     uint8_t payload_len, uint8_t response_len) {
