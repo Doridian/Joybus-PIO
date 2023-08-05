@@ -121,7 +121,7 @@ void loop1() {
     Serial.print("Writing... | ");
     Serial.print(addr, HEX);
     Serial.print(" | ");
-    for (int i = 0; i < N64_BLOCK_SIZE; i++) {
+    for (int i = 0; i < JOYBUS_BLOCK_SIZE; i++) {
       payload[i] = (i % 2 == 0) ? 0x55 : 0xAA;
       Serial.print(".");
     }
@@ -144,7 +144,7 @@ void loop1() {
       Serial.println(last_result);
       return;
     }
-    for (int i = 0; i < N64_BLOCK_SIZE; i++) {
+    for (int i = 0; i < JOYBUS_BLOCK_SIZE; i++) {
       Serial.print(res[i], HEX);
       Serial.print(" ");
     }

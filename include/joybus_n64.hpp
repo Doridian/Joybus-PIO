@@ -6,7 +6,6 @@
 #include "joybus_pio.hpp"
 
 #define N64_PAK_SIZE (32 * 1024)
-#define N64_BLOCK_SIZE 32
 #define N64_BLOCK_COUNT (PAK_SIZE / BLOCK_SIZE)
 
 typedef enum N64Button {
