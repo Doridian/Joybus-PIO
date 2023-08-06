@@ -5,7 +5,7 @@
 #include "joybus_gamecube.hpp"
 #include "joybus_n64.hpp"
 #include "joybus_gba.hpp"
-#include "data_puyo.hpp"
+#include "data_inputrom.hpp"
 
 JoybusPIOInstance joybus_pio;
 void setup() {}
