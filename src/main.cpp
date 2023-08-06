@@ -37,12 +37,23 @@ void loop1() {
     }
 
     inited = true;
+    initedType = false;
   }
 
-  delay(10);
+  delay(1);
+
+  JoybusControllerInfo info_cur = joybus_handshake(joybus_pio, false);
+  if (info_cur.type != info.type) {
+    inited = false;
+    initedType = false;
+    return;
+  }
+
+  delayMicroseconds(100);
 
   switch (info.type) {
   case 0x0004: { // GBA
+    //initedType=true;
     if (!initedType) {
       Serial.print("GBA booting... ");
       int res = joybus_gba_boot(joybus_pio, ROM_gba, ROM_gba_len);
