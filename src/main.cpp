@@ -42,26 +42,15 @@ void loop1() {
 
   switch (info.type) {
   case 0x0004: { // GBA
-    Serial.print("Querying GBA... ");
-    uint8_t payload[64] = {};
-    uint8_t res[64] = {};
-    int len;
-
-    payload[0] = 0x00;
-    payload[1] = 0x00;
-    payload[2] = 0x62;
-    payload[3] = 0x02;
-    res[0] = 0x72;
-    res[1] = 0x02;
-    res[2] = 0x62;
-    res[3] = 0x02;
-    len = joybus_gba_poll(joybus_pio, payload, res, 10);
-    if (len < 0) {
-      Serial.println(" E0");
+    Serial.print("GBA booting... ");
+    int res = joybus_gba_boot(joybus_pio, (uint8_t*)ROM_gba, ROM_gba_len);
+    if (res < 0) {
+      Serial.print("ERROR ");
+      Serial.println(res);
       return;
     }
-    delayMicroseconds(1000000/16);
-    Serial.println(" OK!");
+    Serial.println("Done!");
+    delay(30000);
     break;
   }
   case 0x0500: { // N64
