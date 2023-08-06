@@ -15,6 +15,8 @@
 
 #define GBA_DELAY 70
 
+#define WAIT_TIMEOUT_MS 10000
+
 uint8_t joybus_gba_get_siostat(JoybusPIOInstance instance) {
     JoybusControllerInfo info = joybus_handshake(instance, false);
     return info.aux;
@@ -45,7 +47,11 @@ int joybus_gba_unsafe_read(JoybusPIOInstance instance, uint8_t data[]) {
 int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
     JoybusControllerInfo info;
     info.aux = 0;
+    unsigned long start = millis();
     while ((info.aux & REG_RECV) != 0) {
+      if (millis() - start > WAIT_TIMEOUT_MS) {
+        return -210;
+      }
       info = joybus_handshake(instance, false);
       if (info.type != 0x0004) {
         return -200;
@@ -59,7 +65,11 @@ int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
 int joybus_gba_read(JoybusPIOInstance instance, uint8_t data[]) {
     JoybusControllerInfo info;
     info.aux = 0;
+    unsigned long start = millis();
     while ((info.aux & REG_SEND) == 0) {
+      if (millis() - start > WAIT_TIMEOUT_MS) {
+        return -210;
+      }
       info = joybus_handshake(instance, false);
       if (info.type != 0x0004) {
         return -201;
@@ -138,7 +148,6 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
     }
 
     delayMicroseconds(GBA_DELAY);
-
 
     int len;
     uint32_t session_key;
