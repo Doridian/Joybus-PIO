@@ -12,6 +12,8 @@
 #define REG_PSF0 0x10
 #define REG_SEND 0x08
 
+#define GBA_DELAY 100
+
 int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
     uint8_t payload[] = { JOYBUS_WRITE_GBA, data[0], data[1], data[2], data[3] };
     uint8_t siostat_rx;
@@ -118,7 +120,7 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
 
     int len;
 
-    delay(1);
+    delayMicroseconds(GBA_DELAY);
     uint32_t session_key;
     len = joybus_gba_read(instance, (uint8_t*)&session_key);
     if (len < 0) {
@@ -131,7 +133,7 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
 
     uint32_t our_key = calculate_gc_key(rom_len);
     our_key = __builtin_bswap32(our_key);
-    delay(1);
+    delayMicroseconds(GBA_DELAY);
     len = joybus_gba_write(instance, (uint8_t*)&our_key);
     if (len < 0) {
       return -102;
@@ -139,7 +141,7 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
 
     // Send the ROM header to the GBA
     for (int i = 0; i < 0xC0; i += 4) {
-      delay(1);
+      delayMicroseconds(GBA_DELAY);
       len = joybus_gba_write(instance, rom + i);
       if (len < 0) {
         return -103;
@@ -150,7 +152,7 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
     uint32_t i;
 
     for (i = 0xC0; i < rom_len; i += 4) {
-      delay(1);
+      delayMicroseconds(GBA_DELAY);
       uint8_t encrypted_bytes[4];
       gba_encrypt(rom + i, encrypted_bytes, i, session_key, fcrc);
       len = joybus_gba_write(instance, encrypted_bytes);
@@ -159,7 +161,7 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
       }
     }
 
-    delay(1);
+    delayMicroseconds(GBA_DELAY);
 
     fcrc |= (rom_len << 16);
     session_key = (session_key * 0x6177614B) + 1;
@@ -172,7 +174,7 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
       return -105;
     }
 
-    delay(1);
+    delayMicroseconds(GBA_DELAY);
 
     uint8_t res[4];
     len = joybus_gba_read(instance, res);
@@ -183,22 +185,27 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
     // Wait for handshake ready
     info.aux = 0;
     while ((info.aux & REG_SEND) == 0) {
-      delay(1);
+      delayMicroseconds(GBA_DELAY);
       info = joybus_handshake(instance, false);
     }
 
-    delay(1);
+    delayMicroseconds(GBA_DELAY);
     // Read game code
     len = joybus_gba_read(instance, res);
     if (len < 0) {
       return -107;
     }
 
-    delay(1);
+    delayMicroseconds(GBA_DELAY);
     // Send received gamecode back
-    len = joybus_gba_write(instance, res);
+    len = joybus_gba_write(instance, rom + 0xAC);
     if (len < 0) {
       return -108;
+    }
+
+    // Ensure we have a match
+    if (memcmp(res, rom + 0xAC, 4) != 0) {
+      return -109;
     }
 
     return 0;
