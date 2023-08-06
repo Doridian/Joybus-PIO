@@ -62,7 +62,7 @@ int joybus_gba_wait_and_read(JoybusPIOInstance instance, uint8_t data[]) {
     while ((info.aux & REG_SEND) == 0) {
       info = joybus_handshake(instance, false);
       if (info.type != 0x0004) {
-        return -200;
+        return -201;
       }
       delayMicroseconds(GBA_DELAY);
     }
