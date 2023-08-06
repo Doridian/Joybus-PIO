@@ -11,8 +11,6 @@
 #define REG_JOYCNTRL (*(vu32*)0x4000140)
 #define REG_JOYCTRL_RST 0b00000001
 
-int joyctrl_rst_rdy = 0;
-
 void ResetHalt() {
 	if (REG_JOYCNTRL & REG_JOYCTRL_RST) {
 		SystemCall(0x26);
