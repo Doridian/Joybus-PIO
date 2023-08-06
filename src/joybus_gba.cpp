@@ -13,7 +13,7 @@ int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
     if (len != 1) {
         return -10;
     }
-    return 4;
+        return 4;
 }
 
 int joybus_gba_read(JoybusPIOInstance instance, uint8_t data[]) {
@@ -26,8 +26,17 @@ int joybus_gba_transact(JoybusPIOInstance instance, uint8_t send[], uint8_t recv
     if (len < 0) {
         return len;
     }
-    delay(1);
-    return joybus_gba_read(instance, recv);
+    while (true) {
+        delay(1);
+        len = joybus_gba_read(instance, recv);
+        if (len < 0) {
+            return len;
+        }
+        if (recv[4] & 0b00000010) {
+            return len;
+        }
+        Serial.print("-");
+    }
 }
 
 int joybus_gba_poll(JoybusPIOInstance instance, uint8_t send[], uint8_t recv[], int retries) {
@@ -39,7 +48,10 @@ int joybus_gba_poll(JoybusPIOInstance instance, uint8_t send[], uint8_t recv[], 
             continue;
         }
         if ((buf[0] != recv[0]) || (buf[1] != recv[1]) || (buf[1] != recv[2]) || (buf[3] != recv[3])) {
-            Serial.print(*(uint32_t*)buf, HEX);
+            Serial.print(buf[0], HEX);
+            Serial.print(buf[1], HEX);
+            Serial.print(buf[2], HEX);
+            Serial.print(buf[3], HEX);
             Serial.print(buf[4], HEX);
             Serial.print(" ");
             delay(1);

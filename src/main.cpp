@@ -60,7 +60,7 @@ void loop1() {
       Serial.println(" E0");
       return;
     }
-    delayMicroseconds(100);
+    delayMicroseconds(1000000/16);
     Serial.println(" OK!");
     break;
   }
