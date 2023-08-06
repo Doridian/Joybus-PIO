@@ -45,19 +45,26 @@ void loop1() {
   case 0x0004: { // GBA
     if (!initedType) {
       Serial.print("GBA booting... ");
-      int res = joybus_gba_boot(joybus_pio, (uint8_t*)ROM_gba, ROM_gba_len);
+      int res = joybus_gba_boot(joybus_pio, ROM_gba, ROM_gba_len);
       if (res < 0) {
-        Serial.print("ERROR ");
+        Serial.print("UL ERROR ");
         Serial.println(res);
         return;
       }
+      /*res = joybus_gba_default_handshake(joybus_pio, ROM_gba, ROM_gba_len);
+      if (res < 0) {
+        Serial.print("HS ERROR ");
+        Serial.println(res);
+        return;
+      }*/
       Serial.println("Done!");
       initedType = true;
       delay(1);
     }
+
     Serial.print("Querying GBA... ");
     uint8_t data[4];
-    int res = joybus_gba_read(joybus_pio, data);
+    int res = joybus_gba_wait_and_read(joybus_pio, data);
     if (res < 0) {
       Serial.print("ERROR ");
       Serial.println(res);

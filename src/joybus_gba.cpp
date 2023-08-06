@@ -42,6 +42,34 @@ int joybus_gba_read(JoybusPIOInstance instance, uint8_t data[]) {
     return 4;
 }
 
+int joybus_gba_wait_and_write(JoybusPIOInstance instance, uint8_t data[]) {
+    JoybusControllerInfo info;
+    info.aux = 0;
+    while ((info.aux & REG_RECV) != 0) {
+      info = joybus_handshake(instance, false);
+      if (info.type != 0x0004) {
+        return -200;
+      }
+      delayMicroseconds(GBA_DELAY);
+    }
+
+    return joybus_gba_write(instance, data);
+}
+
+int joybus_gba_wait_and_read(JoybusPIOInstance instance, uint8_t data[]) {
+    JoybusControllerInfo info;
+    info.aux = 0;
+    while ((info.aux & REG_SEND) == 0) {
+      info = joybus_handshake(instance, false);
+      if (info.type != 0x0004) {
+        return -200;
+      }
+      delayMicroseconds(GBA_DELAY);
+    }
+
+    return joybus_gba_read(instance, data);
+}
+
 // References for the below code (the boot sequence itself as well as the key/CRC/encryption functions)
 // https://github.com/FIX94/gc-gba-link-cable-demo/blob/master/source/main.c
 // https://github.com/Sage-of-Mirrors/libgbacom/tree/master/libgbacom
@@ -109,20 +137,22 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
       return -100;
     }
 
-    int len;
-
     delayMicroseconds(GBA_DELAY);
+
+
+    int len;
     uint32_t session_key;
-    len = joybus_gba_read(instance, (uint8_t*)&session_key);
+    len = joybus_gba_wait_and_read(instance, (uint8_t*)&session_key);
     if (len < 0) {
       return -101;
     }
 
+    delayMicroseconds(GBA_DELAY);
+
     session_key ^= 0x6F646573;
 
     uint32_t our_key = calculate_gc_key(rom_len);
-    delayMicroseconds(GBA_DELAY);
-    len = joybus_gba_write(instance, (uint8_t*)&our_key);
+    len = joybus_gba_wait_and_write(instance, (uint8_t*)&our_key);
     if (len < 0) {
       return -102;
     }
@@ -157,15 +187,16 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
     fcrc ^= ((~(i + (0x20 << 20))) + 1);
     fcrc ^= 0x20796220;
 
-    len = joybus_gba_write(instance, (uint8_t*)&fcrc);
+    len = joybus_gba_wait_and_write(instance, (uint8_t*)&fcrc);
     if (len < 0) {
       return -105;
     }
 
     delayMicroseconds(GBA_DELAY);
 
+    // Read back useless CRC reply
     uint8_t res[4];
-    len = joybus_gba_read(instance, res);
+    len = joybus_gba_wait_and_read(instance, res);
     if (len < 0) {
       return -106;
     }
@@ -174,29 +205,16 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
 }
 
 int joybus_gba_default_handshake(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
-    JoybusControllerInfo info;
-    // Wait for handshake ready
-    info.aux = 0;
-    while ((info.aux & REG_SEND) == 0) {
-      delayMicroseconds(GBA_DELAY);
-      info = joybus_handshake(instance, false);
-      Serial.print("?");
-      if (info.type != 0x0004) {
-        return -107;
-      }
-    }
-
     uint8_t res[4];
-    delayMicroseconds(GBA_DELAY);
     // Read game code
-    int len = joybus_gba_read(instance, res);
+    int len = joybus_gba_wait_and_read(instance, res);
     if (len < 0) {
       return -108;
     }
 
     delayMicroseconds(GBA_DELAY);
     // Send received gamecode back
-    len = joybus_gba_write(instance, rom + 0xAC);
+    len = joybus_gba_wait_and_write(instance, rom + 0xAC);
     if (len < 0) {
       return -109;
     }
