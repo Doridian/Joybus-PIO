@@ -5,7 +5,7 @@
 #include "joybus_gamecube.hpp"
 #include "joybus_n64.hpp"
 #include "joybus_gba.hpp"
-#include "data_testrom.hpp"
+#include "data_inputrom.hpp"
 
 JoybusPIOInstance joybus_pio;
 void setup() {}
@@ -37,20 +37,41 @@ void loop1() {
     }
 
     inited = true;
-    delay(10);
   }
+
+  delay(10);
 
   switch (info.type) {
   case 0x0004: { // GBA
-    Serial.print("GBA booting... ");
-    int res = joybus_gba_boot(joybus_pio, (uint8_t*)ROM_gba, ROM_gba_len);
+    if (!initedType) {
+      Serial.print("GBA booting... ");
+      int res = joybus_gba_boot(joybus_pio, (uint8_t*)ROM_gba, ROM_gba_len);
+      if (res < 0) {
+        Serial.print("ERROR ");
+        Serial.println(res);
+        return;
+      }
+      Serial.println("Done!");
+      initedType = true;
+      delay(1);
+    }
+    Serial.print("Querying GBA... ");
+    uint8_t data[4];
+    int res = joybus_gba_read(joybus_pio, data);
     if (res < 0) {
       Serial.print("ERROR ");
       Serial.println(res);
       return;
     }
-    Serial.println("Done!");
-    delay(30000);
+    Serial.print("Data: ");
+    Serial.print(data[0], HEX);
+    Serial.print(" ");
+    Serial.print(data[1], HEX);
+    Serial.print(" ");
+    Serial.print(data[2], HEX);
+    Serial.print(" ");
+    Serial.print(data[3], HEX);
+    Serial.println(" Done!");
     break;
   }
   case 0x0500: { // N64

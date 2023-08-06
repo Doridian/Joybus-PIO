@@ -11,8 +11,14 @@
 #define REG_PSF1 0x20
 #define REG_PSF0 0x10
 #define REG_SEND 0x08
+#define REG_RECV 0x02
 
 #define GBA_DELAY 70
+
+uint8_t joybus_gba_get_siostat(JoybusPIOInstance instance) {
+    JoybusControllerInfo info = joybus_handshake(instance, false);
+    return info.aux;
+}
 
 int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
     uint8_t payload[] = { JOYBUS_WRITE_GBA, data[0], data[1], data[2], data[3] };
@@ -21,6 +27,7 @@ int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
     if (len != 1 || (siostat_rx & REG_VALID_MASK)) {
         return -10;
     }
+
     return 4;
 }
 
@@ -163,19 +170,26 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
       return -106;
     }
 
+    return 0;
+}
+
+int joybus_gba_default_handshake(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
+    JoybusControllerInfo info;
     // Wait for handshake ready
     info.aux = 0;
     while ((info.aux & REG_SEND) == 0) {
       delayMicroseconds(GBA_DELAY);
       info = joybus_handshake(instance, false);
+      Serial.print("?");
       if (info.type != 0x0004) {
         return -107;
       }
     }
 
+    uint8_t res[4];
     delayMicroseconds(GBA_DELAY);
     // Read game code
-    len = joybus_gba_read(instance, res);
+    int len = joybus_gba_read(instance, res);
     if (len < 0) {
       return -108;
     }
