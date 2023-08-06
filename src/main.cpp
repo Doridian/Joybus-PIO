@@ -42,14 +42,16 @@ void loop1() {
 
   delay(1);
 
-  JoybusControllerInfo info_cur = joybus_handshake(joybus_pio, false);
-  if (info_cur.type != info.type) {
-    inited = false;
-    initedType = false;
-    return;
-  }
+  if (initedType) {
+    JoybusControllerInfo info_cur = joybus_handshake(joybus_pio, false);
+    if (info_cur.type != info.type) {
+      inited = false;
+      initedType = false;
+      return;
+    }
 
-  delayMicroseconds(100);
+    delayMicroseconds(100);
+  }
 
   switch (info.type) {
   case 0x0004: { // GBA
@@ -60,6 +62,9 @@ void loop1() {
       if (res < 0) {
         Serial.print("UL ERROR ");
         Serial.println(res);
+        if (res == -1000) { // Invalid device
+          inited = false;
+        }
         return;
       }
 
