@@ -160,7 +160,7 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
     // Send the ROM header to the GBA
     for (int i = 0; i < 0xC0; i += 4) {
       delayMicroseconds(GBA_DELAY);
-      len = joybus_gba_write(instance, rom + i);
+      len = joybus_gba_wait_and_write(instance, rom + i);
       if (len < 0) {
         return -103;
       }
@@ -173,7 +173,7 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
       delayMicroseconds(GBA_DELAY);
       uint8_t encrypted_bytes[4];
       gba_encrypt(rom + i, encrypted_bytes, i, session_key, fcrc);
-      len = joybus_gba_write(instance, encrypted_bytes);
+      len = joybus_gba_wait_and_write(instance, encrypted_bytes);
       if (len < 0) {
         return -104;
       }
