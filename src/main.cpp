@@ -5,7 +5,7 @@
 #include "joybus_gamecube.hpp"
 #include "joybus_n64.hpp"
 #include "joybus_gba.hpp"
-#include "data_inputrom.hpp"
+#include "data_puyo.hpp"
 
 JoybusPIOInstance joybus_pio;
 void setup() {}
@@ -51,12 +51,15 @@ void loop1() {
         Serial.println(res);
         return;
       }
-      /*res = joybus_gba_default_handshake(joybus_pio, ROM_gba, ROM_gba_len);
+
+      Serial.print("OK. Handshaking... ");
+      res = joybus_gba_default_handshake(joybus_pio, ROM_gba, ROM_gba_len);
       if (res < 0) {
         Serial.print("HS ERROR ");
         Serial.println(res);
         return;
-      }*/
+      }
+
       Serial.println("Done!");
       initedType = true;
       delay(1);

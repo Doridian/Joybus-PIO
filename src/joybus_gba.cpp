@@ -201,6 +201,8 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
       return -106;
     }
 
+    delayMicroseconds(GBA_DELAY);
+
     return 0;
 }
 
