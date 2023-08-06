@@ -35,14 +35,6 @@ int joybus_gba_read(JoybusPIOInstance instance, uint8_t data[]) {
     return 4;
 }
 
-int joybus_gba_transact(JoybusPIOInstance instance, uint8_t send[], uint8_t recv[]) {
-    int len = joybus_gba_write(instance, send);
-    if (len < 0) {
-        return len;
-    }
-    return joybus_gba_read(instance, recv);
-}
-
 // References for the below code (the boot sequence itself as well as the key/CRC/encryption functions)
 // https://github.com/FIX94/gc-gba-link-cable-demo/blob/master/source/main.c
 // https://github.com/Sage-of-Mirrors/libgbacom/tree/master/libgbacom
