@@ -40,54 +40,42 @@ int joybus_gba_read(JoybusPIOInstance instance, uint8_t data[]) {
 // https://github.com/Sage-of-Mirrors/libgbacom/tree/master/libgbacom
 
 static uint32_t calculate_gc_key(uint32_t size) {
-  unsigned int ret = 0;
   size = (size - 0x200) >> 3;
   int res1 = (size & 0x3F80) << 1;
   res1 |= (size & 0x4000) << 2;
   res1 |= (size & 0x7F);
   res1 |= 0x380000;
-  int res2 = res1;
-  res1 = res2 >> 0x10;
-  int res3 = res2 >> 8;
+  int res3 = res1 >> 8;
+  res3 += res1 >> 16;
   res3 += res1;
-  res3 += res2;
   res3 <<= 24;
-  res3 |= res2;
+  res3 |= res1;
   res3 |= 0x80808080;
 
-  if ((res3 & 0x200) == 0) {
-    ret |= (((res3) & 0xFF) ^ 0x4B) << 24;
-    ret |= (((res3 >> 8) & 0xFF) ^ 0x61) << 16;
-    ret |= (((res3 >> 16) & 0xFF) ^ 0x77) << 8;
-    ret |= (((res3 >> 24) & 0xFF) ^ 0x61);
+  bool other_key = (res3 & 0x200) == 0;
+  if (other_key) {
+    res3 ^= 0x6177614B;
   } else {
-    ret |= (((res3) & 0xFF) ^ 0x73) << 24;
-    ret |= (((res3 >> 8) & 0xFF) ^ 0x65) << 16;
-    ret |= (((res3 >> 16) & 0xFF) ^ 0x64) << 8;
-    ret |= (((res3 >> 24) & 0xFF) ^ 0x6F);
+    res3 ^= 0x6F646573;
   }
-  return ret;
+  return res3;
 }
 
 static uint32_t gba_crc(uint32_t crc, uint32_t value) {
-  int i;
-  for (i = 0; i < 0x20; i++)
-  {
-    if ((crc ^ value) & 1)
-    {
+  for (int i = 0; i < 0x20; i++) {
+    if ((crc ^ value) & 1) {
       crc >>= 1;
       crc ^= 0xa1c1;
-    }
-    else
+    } else {
       crc >>= 1;
+    }
     value >>= 1;
   }
   return crc;
 }
 
-static void gba_encrypt(uint8_t* data, uint8_t* enc_bytes, uint32_t i, uint32_t& session_key, uint32_t& fcrc) {
-  uint32_t plaintext = ((int)((data[0]) << 24) | (int)((data[1]) << 16) | (int)((data[2]) << 8) | (int)((data[3])));
-  plaintext = __builtin_bswap32(plaintext);
+static void gba_encrypt(uint8_t data[], uint8_t enc_bytes[], uint32_t i, uint32_t& session_key, uint32_t& fcrc) {
+  uint32_t plaintext = *(uint32_t*)data;
 
   fcrc = gba_crc(fcrc, plaintext);
   session_key = (session_key * 0x6177614B) + 1;
@@ -96,20 +84,21 @@ static void gba_encrypt(uint8_t* data, uint8_t* enc_bytes, uint32_t i, uint32_t&
   encrypted ^= ((~(i + (0x20 << 20))) + 1);
   encrypted ^= 0x20796220;
 
-  encrypted = __builtin_bswap32(encrypted);
-  
-  enc_bytes[0] = (encrypted & 0xFF000000) >> 24;
-  enc_bytes[1] = (encrypted & 0x00FF0000) >> 16;
-  enc_bytes[2] = (encrypted & 0x0000FF00) >> 8;
-  enc_bytes[3] = (encrypted & 0x000000FF);
+  *(uint32_t*)enc_bytes = encrypted;
 }
 
 int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
     JoybusControllerInfo info;
     delay(10);
     info = joybus_handshake(instance, true);
+    if (info.type != 0x04) {
+        return -98;
+    }
     delay(10);
     info = joybus_handshake(instance, false);
+    if (info.type != 0x04) {
+        return -99;
+    }
     if ((info.aux & REG_PSF0) == 0) {
       return -100;
     }
@@ -123,12 +112,9 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
       return -101;
     }
 
-    session_key = __builtin_bswap32(session_key);
-    session_key ^= 0x7365646F;
-    session_key = __builtin_bswap32(session_key);
+    session_key ^= 0x6F646573;
 
     uint32_t our_key = calculate_gc_key(rom_len);
-    our_key = __builtin_bswap32(our_key);
     delayMicroseconds(GBA_DELAY);
     len = joybus_gba_write(instance, (uint8_t*)&our_key);
     if (len < 0) {
@@ -183,25 +169,28 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
     while ((info.aux & REG_SEND) == 0) {
       delayMicroseconds(GBA_DELAY);
       info = joybus_handshake(instance, false);
+      if (info.type != 0x0004) {
+        return -107;
+      }
     }
 
     delayMicroseconds(GBA_DELAY);
     // Read game code
     len = joybus_gba_read(instance, res);
     if (len < 0) {
-      return -107;
+      return -108;
     }
 
     delayMicroseconds(GBA_DELAY);
     // Send received gamecode back
     len = joybus_gba_write(instance, rom + 0xAC);
     if (len < 0) {
-      return -108;
+      return -109;
     }
 
     // Ensure we have a match
     if (memcmp(res, rom + 0xAC, 4) != 0) {
-      return -109;
+      return -110;
     }
 
     return 0;
