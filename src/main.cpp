@@ -4,6 +4,8 @@
 #include "joybus_generic.hpp"
 #include "joybus_gamecube.hpp"
 #include "joybus_n64.hpp"
+#include "joybus_gba.hpp"
+#include "data.hpp"
 
 JoybusPIOInstance joybus_pio;
 void setup() {}
@@ -21,7 +23,7 @@ JoybusControllerInfo info;
 
 void loop1() {
   if (!inited) {
-    delay(5000);
+    delay(100);
     Serial.print("Initializing...");
     info = joybus_handshake(joybus_pio, true);
     Serial.print(" Type: ");
@@ -30,12 +32,38 @@ void loop1() {
     Serial.print(info.aux, HEX);
     Serial.println(" Done!");
 
+    if (info.type == 0) {
+      return;
+    }
+
     inited = true;
+    delay(10);
   }
 
-  delay(100);
-
   switch (info.type) {
+  case 0x0004: { // GBA
+    Serial.print("Querying GBA... ");
+    uint8_t payload[64] = {};
+    uint8_t res[64] = {};
+    int len;
+
+    payload[0] = 0x00;
+    payload[1] = 0x00;
+    payload[2] = 0x62;
+    payload[3] = 0x02;
+    res[0] = 0x72;
+    res[1] = 0x02;
+    res[2] = 0x62;
+    res[3] = 0x02;
+    len = joybus_gba_poll(joybus_pio, payload, res, 10);
+    if (len < 0) {
+      Serial.println(" E0");
+      return;
+    }
+    delayMicroseconds(100);
+    Serial.println(" OK!");
+    break;
+  }
   case 0x0500: { // N64
     Serial.print("Querying N64... ");
     N64ControllerState state = joybus_n64_read_controller(joybus_pio);
