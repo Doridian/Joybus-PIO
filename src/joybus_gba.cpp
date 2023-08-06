@@ -45,20 +45,19 @@ static uint32_t calculate_gc_key(uint32_t size) {
   res1 |= (size & 0x4000) << 2;
   res1 |= (size & 0x7F);
   res1 |= 0x380000;
-  int res3 = res1 >> 8;
-  res3 += res1 >> 16;
-  res3 += res1;
-  res3 <<= 24;
-  res3 |= res1;
-  res3 |= 0x80808080;
+  int res2 = res1 >> 8;
+  res2 += res1 >> 16;
+  res2 += res1;
+  res2 <<= 24;
+  res2 |= res1;
+  res2 |= 0x80808080;
 
-  bool other_key = (res3 & 0x200) == 0;
-  if (other_key) {
-    res3 ^= 0x6177614B;
+  if ((res2 & 0x200) == 0) {
+    res2 ^= 0x6177614B;
   } else {
-    res3 ^= 0x6F646573;
+    res2 ^= 0x6F646573;
   }
-  return res3;
+  return res2;
 }
 
 static uint32_t gba_crc(uint32_t crc, uint32_t value) {
