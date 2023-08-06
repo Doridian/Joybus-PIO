@@ -12,7 +12,7 @@
 #define REG_PSF0 0x10
 #define REG_SEND 0x08
 
-#define GBA_DELAY 100
+#define GBA_DELAY 70
 
 int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
     uint8_t payload[] = { JOYBUS_WRITE_GBA, data[0], data[1], data[2], data[3] };
