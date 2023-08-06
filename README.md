@@ -23,3 +23,5 @@ Without the below documentation/code, this would have taken much longer to figur
 - https://github.com/FIX94/gc-gba-link-cable-demo/blob/master/source/main.c
 
 - https://github.com/Sage-of-Mirrors/libgbacom/tree/master/libgbacom/src/VBA
+
+- https://problemkaputt.de/gbatek.htm
