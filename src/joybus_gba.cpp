@@ -46,9 +46,9 @@ int joybus_gba_unsafe_read(JoybusPIOInstance instance, uint8_t data[]) {
 
 int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
     JoybusControllerInfo info;
-    info.aux = 0;
+
     unsigned long start = millis();
-    while ((info.aux & REG_RECV) != 0) {
+    do {
       if (millis() - start > WAIT_TIMEOUT_MS) {
         return -210;
       }
@@ -57,7 +57,7 @@ int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
         return -200;
       }
       delayMicroseconds(GBA_DELAY);
-    }
+    } while ((info.aux & REG_RECV) != 0);
 
     return joybus_gba_unsafe_write(instance, data);
 }
@@ -66,7 +66,7 @@ int joybus_gba_read(JoybusPIOInstance instance, uint8_t data[]) {
     JoybusControllerInfo info;
     info.aux = 0;
     unsigned long start = millis();
-    while ((info.aux & REG_SEND) == 0) {
+    do {
       if (millis() - start > WAIT_TIMEOUT_MS) {
         return -210;
       }
@@ -75,7 +75,7 @@ int joybus_gba_read(JoybusPIOInstance instance, uint8_t data[]) {
         return -201;
       }
       delayMicroseconds(GBA_DELAY);
-    }
+    } while ((info.aux & REG_SEND) == 0);
 
     return joybus_gba_unsafe_read(instance, data);
 }
@@ -152,7 +152,7 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
     int len;
     uint32_t session_key;
     len = joybus_gba_read(instance, (uint8_t*)&session_key);
-    if (len < 0) {
+    if (len < 0 || session_key == 0x00000000) {
       return -101;
     }
 
