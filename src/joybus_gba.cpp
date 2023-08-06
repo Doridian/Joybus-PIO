@@ -139,7 +139,6 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
 
     delayMicroseconds(GBA_DELAY);
 
-
     int len;
     uint32_t session_key;
     len = joybus_gba_read(instance, (uint8_t*)&session_key);
