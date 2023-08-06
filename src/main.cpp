@@ -67,7 +67,7 @@ void loop1() {
 
     Serial.print("Querying GBA... ");
     uint8_t data[4];
-    int res = joybus_gba_wait_and_read(joybus_pio, data);
+    int res = joybus_gba_read(joybus_pio, data);
     if (res < 0) {
       Serial.print("ERROR ");
       Serial.println(res);
