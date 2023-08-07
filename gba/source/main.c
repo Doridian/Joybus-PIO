@@ -63,7 +63,7 @@ int main(void) {
 
 	while (1) {
 		ResetHalt();
-		REG_JOYTR = REG_JOYCNTRL;
+		REG_JOYTR = REG_KEYINPUT;
 	}
 
 	return 0;
