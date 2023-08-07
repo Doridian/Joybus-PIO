@@ -17,12 +17,12 @@
 
 #define WAIT_TIMEOUT_MS 10000
 
-uint8_t joybus_gba_get_siostat(JoybusPIOInstance instance) {
+static uint8_t joybus_gba_get_siostat(JoybusPIOInstance instance) {
     JoybusControllerInfo info = joybus_handshake(instance, false);
     return info.aux;
 }
 
-int joybus_gba_unsafe_write(JoybusPIOInstance instance, uint8_t data[]) {
+static int joybus_gba_unsafe_write(JoybusPIOInstance instance, uint8_t data[]) {
     uint8_t payload[] = { JOYBUS_WRITE_GBA, data[0], data[1], data[2], data[3] };
     uint8_t siostat_rx;
     int len = joybus_pio_transmit_receive(instance, payload, 5, &siostat_rx, 1);
@@ -33,7 +33,7 @@ int joybus_gba_unsafe_write(JoybusPIOInstance instance, uint8_t data[]) {
     return 4;
 }
 
-int joybus_gba_unsafe_read(JoybusPIOInstance instance, uint8_t data[]) {
+static int joybus_gba_unsafe_read(JoybusPIOInstance instance, uint8_t data[]) {
     uint8_t payload[] = { JOYBUS_READ_GBA };
     uint8_t buf[5];
     int len = joybus_pio_transmit_receive(instance, payload , 1, buf, 5);
