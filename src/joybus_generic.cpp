@@ -7,7 +7,12 @@ JoybusControllerInfo joybus_handshake(JoybusPIOInstance instance, bool reset) {
   JoybusControllerInfo info;
   info.type = 0x0000;
   uint8_t payload[] = {reset ? (uint8_t)0xFF : (uint8_t)0x00};
-  joybus_pio_transmit_receive(instance, payload, 1, (uint8_t *)&info, 3);
+  int len = joybus_pio_transmit_receive(instance, payload, 1, (uint8_t *)&info, 3);
+  if (len != 3) {
+    info.type = 0;
+    info.aux = 0;
+    return info;
+  }
   info.type = UINT16_FIX_ENDIAN(info.type);
   return info;
 }
