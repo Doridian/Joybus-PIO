@@ -56,6 +56,9 @@ int joybus_gba_write(JoybusPIOInstance instance, uint8_t data[]) {
       if (info.type != 0x0004) {
         return -200;
       }
+      if (info.aux & REG_VALID_MASK) {
+        return -220;
+      }
       delayMicroseconds(GBA_DELAY);
     } while ((info.aux & REG_RECV) != 0);
 
@@ -73,6 +76,9 @@ int joybus_gba_read(JoybusPIOInstance instance, uint8_t data[]) {
       info = joybus_handshake(instance, false);
       if (info.type != 0x0004) {
         return -201;
+      }
+      if (info.aux & REG_VALID_MASK) {
+        return -221;
       }
       delayMicroseconds(GBA_DELAY);
     } while ((info.aux & REG_SEND) == 0);
