@@ -149,6 +149,9 @@ int joybus_gba_boot(JoybusPIOInstance instance, uint8_t rom[], int rom_len) {
     if (info.type != 0x04) {
         return -1000;
     }
+    if (info.aux & REG_VALID_MASK) {
+      return -1001;
+    }
     if ((info.aux & REG_PSF0) == 0) {
       return -100;
     }
