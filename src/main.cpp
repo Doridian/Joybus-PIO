@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Joystick.h>
 
 #include "joybus_pio.hpp"
 #include "joybus_generic.hpp"
@@ -8,9 +9,10 @@
 #include "data_inputrom.hpp"
 
 JoybusPIOInstance joybus_pio;
-void setup() {}
+void setup1() {}
 
-void setup1() {
+void setup() {
+  Joystick.begin();
   Serial.begin(115200);
   Serial.println("HI");
 
@@ -21,7 +23,53 @@ bool inited = false;
 bool initedType = false;
 JoybusControllerInfo info;
 
-void loop1() {
+#define BUTTON_UP (1 << 6)
+#define BUTTON_RIGHT (1 << 4)
+#define BUTTON_LEFT (1 << 5)
+#define BUTTON_DOWN (1 << 7)
+
+static int makeHatDir(bool up, bool down, bool left, bool right) {
+  if (up && down) {
+    up = false;
+    down = false;
+  }
+  if (left && right) {
+    left = false;
+    right = false;
+  }
+
+  if (up) {
+    if (right) {
+      return 45;
+    }
+    if (left) {
+      return 315;
+    }
+    return 360;
+  }
+
+  if (down) {
+    if (right) {
+      return 135;
+    }
+    if (left) {
+      return 225;
+    }
+    return 180;
+  }
+
+  if (left) {
+    return 270;
+  }
+
+  if (right) {
+    return 90;
+  }
+
+  return -1;
+}
+
+void loop() {
   if (!inited) {
     delay(100);
     Serial.print("Initializing...");
@@ -89,14 +137,16 @@ void loop1() {
       Serial.println(res);
       return;
     }
-    Serial.print("Data: ");
-    Serial.print(data[0], HEX);
-    Serial.print(" ");
-    Serial.print(data[1], HEX);
-    Serial.print(" ");
-    Serial.print(data[2], HEX);
-    Serial.print(" ");
-    Serial.print(data[3], HEX);
+
+    for (int i = 0 ; i < 8; i++) {
+      Joystick.setButton(i, (data[0] & (1 << i)) ? 0 : 1);
+    }
+    for (int i = 0 ; i < 2; i++) {
+      Joystick.setButton(i + 8, (data[1] & (1 << i)) ? 0 : 1);
+    }
+
+    Joystick.hat(makeHatDir(!(data[0] & BUTTON_UP), !(data[0] & BUTTON_DOWN), !(data[0] & BUTTON_LEFT), !(data[0] & BUTTON_RIGHT)));
+
     Serial.println(" Done!");
     break;
   }
@@ -216,4 +266,5 @@ void loop1() {
   }
 }
 
-void loop() {}
+void loop1() {
+}
