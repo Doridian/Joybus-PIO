@@ -16,7 +16,7 @@ Without the below documentation/code, this would have taken much longer to figur
 
 - https://n64brew.dev/wiki/Joybus_Protocol
 
-- https://simplecontrollers.com/blogs/resources/gamecube-protocol
+- https://web.archive.org/web/20250512232517/https://simplecontrollers.com/blogs/resources/gamecube-protocol
 
 ### GBA joyboot
 
